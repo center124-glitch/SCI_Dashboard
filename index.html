@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ============================================================================
-   SBK Store Inspect — ระบบบันทึกการตรวจร้านค้า & แดชบอร์ดสรุปผล   SCI_Dashboard_v8.html v8.0 — แอปแดชบอร์ดสรุปผล (บันทึกการตรวจได้ด้วย) · โทนคราม–ม่วง
+   SBK Store Inspect — ระบบบันทึกการตรวจร้านค้า & แดชบอร์ดสรุปผล   SCI_Dashboard_v9.html v9.0 — แอปแดชบอร์ดสรุปผล (บันทึกการตรวจได้ด้วย) · โทนคราม–ม่วง
    v4.0: แดชบอร์ดโฉมใหม่ 3 แท็บ (ภาพรวม / รายงานรายวัน / ประวัติ), รายงานประจำวัน (LINE + A4),
          เชื่อมต่อทนทานขึ้น (retry, fetch→JSONP สำรอง, แคช, Outbox ออฟไลน์, รีเฟรชอัตโนมัติ)
    v3.0: รายชื่อผู้ตรวจ, ชั้น/โซน, ตัด GPS, ฝัง URL Web App, ใบรายงาน LINE (ดูตัวอย่างก่อนบันทึก,
@@ -433,6 +433,11 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
             <input id="fStore" class="input input-hero" list="storeList" maxlength="200" autocomplete="off" placeholder="ระบุชื่อร้านค้าหรือสถานที่">
             <datalist id="storeList"></datalist>
           </div>
+          <div>
+            <label class="label mb-1.5" for="fShift"><span data-icon="clock"></span>รอบการตรวจ <span style="color:var(--danger)">*</span></label>
+            <select id="fShift" class="input"></select>
+            <div class="text-xs muted mt-1" id="fShiftHint"></div>
+          </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="label mb-1.5" for="fFloor"><span data-icon="layers"></span>ชั้น <span style="color:var(--danger)">*</span></label>
@@ -627,7 +632,7 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
             <button class="btn btn-ghost" id="btnDailyPrint"><span data-icon="printer"></span>พิมพ์ A4</button>
           </div>
         </div>
-        <div id="dailyStats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5"></div>
+        <div id="dailyStats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5"></div>
         <div id="dailyEmpty" class="card p-10 text-center muted mb-5" hidden>
           <div class="mx-auto w-14 h-14 rounded-2xl grid place-items-center mb-3" style="background:var(--primary-soft);color:var(--primary)" data-icon="calendar"></div>
           <div class="font-bold" style="color:var(--text)">ไม่มีการตรวจในวันนี้</div>
@@ -661,13 +666,14 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
               <button class="btn btn-ghost" id="btnJson"><span data-icon="download"></span>JSON</button>
             </div>
           </div>
-          <div class="p-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div class="p-4 grid sm:grid-cols-2 lg:grid-cols-5 gap-2">
             <div class="relative sm:col-span-2 lg:col-span-1">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 muted w-4 h-4" data-icon="search"></span>
               <input id="tSearch" class="input" style="padding-left:2.3rem" placeholder="ค้นหา ร้านค้า / ชั้น / โซน / ผู้ตรวจ / หมายเหตุ">
             </div>
             <select id="tStore" class="input"><option value="">ทุกร้านค้า</option></select>
             <select id="tInspector" class="input"><option value="">ผู้ตรวจทั้งหมด</option></select>
+            <select id="tShift" class="input"><option value="">ทุกรอบการตรวจ</option></select>
             <select id="tStatus" class="input">
               <option value="">ทุกสถานะ</option>
               <option value="ok">ยืนยันแล้ว</option>
@@ -723,6 +729,12 @@ const CONFIG = {
     'นาย สุนทร อินเดช', 'นาย นิพัต มุสันเที๊ยะ', 'นาย จักรินทร์ สินพันธ์'
   ],
   // ตัวเลือกชั้นเริ่มต้น (ใส่เพิ่มได้) — ระบบรวมกับค่าที่เคยบันทึกไว้ในชีตให้อัตโนมัติ
+  // รอบการตรวจ: ชื่อรอบ + ช่วงเวลา [เริ่ม, สิ้นสุด) แบบ 24 ชม. (รอบดึกข้ามเที่ยงคืนได้)
+  SHIFTS: [
+    { name: 'เช้า', from: 6, to: 14 },
+    { name: 'บ่าย', from: 14, to: 22 },
+    { name: 'ดึก', from: 22, to: 6 }
+  ],
   FLOORS: ['B', '1', '2', '3', '4', '5', '6'],   // ตัวเลือกชั้นมาตรฐาน (เพิ่ม/ลดได้) + มีตัวเลือก "อื่นๆ" ให้พิมพ์เอง
   ZONES: [],
   REPORT_QUALITY: 0.88,         // คุณภาพ JPEG ของใบรายงาน LINE (ไฟล์ ~200–400KB ส่งใน LINE ได้คมชัด)
@@ -790,7 +802,7 @@ const state = {
   lastUpdated: null,
   view: 'form',
   period: { type: 'month', anchor: nowMall() },
-  filters: { q: '', store: '', inspector: '', status: '' },
+  filters: { q: '', store: '', inspector: '', shift: '', status: '' },
   page: 1,
   charts: {},
   saving: false,
@@ -818,7 +830,7 @@ const LOGO_URL = svgToDataUrl(buildLogoSvg());
 
 /* ลำดับคอลัมน์ใน Google Sheets (v3) — ต้องตรงกับ HEADERS ใน Code_StoreInspect_v3.gs
    ข้อมูลหลักอยู่หน้า ไฟล์รูป (รูปจุดตรวจ + ใบรายงาน) อยู่ท้ายสุด */
-const REC_FIELDS = ['ID', 'Timestamp', 'InspectionDate', 'InspectionTime', 'InspectorName', 'Floor', 'Zone', 'StoreName', 'Status', 'Note', 'Details', 'ImageURL', 'ReportURL'];
+const REC_FIELDS = ['ID', 'Timestamp', 'InspectionDate', 'InspectionTime', 'InspectorName', 'Shift', 'Floor', 'Zone', 'StoreName', 'Status', 'Note', 'Details', 'ImageURL', 'ReportURL'];
 const TH_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const TH_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const TH_DAYS = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
@@ -927,6 +939,13 @@ function sanitizeRecords(list) {
   return { records: [...map.values()], invalid, dupes };
 }
 const floorZone = r => [r.Floor && `ชั้น ${r.Floor}`, r.Zone && `โซน ${r.Zone}`].filter(Boolean).join(' · ');
+/** รอบการตรวจของเวลาที่กำหนด — รองรับรอบที่คร่อมเที่ยงคืน (เช่น ดึก 22:00–06:00) */
+function shiftOf(d) {
+  const h = (d || nowMall()).getHours();
+  const hit = CONFIG.SHIFTS.find(s => s.from <= s.to ? (h >= s.from && h < s.to) : (h >= s.from || h < s.to));
+  return hit ? hit.name : '';
+}
+const shiftLabel = r => r.Shift || '';
 const byNewest = (a, b) => (b._date ? b._date.getTime() : -Infinity) - (a._date ? a._date.getTime() : -Infinity);
 
 function randomToken(len = 4) {
@@ -1038,7 +1057,7 @@ function createMockData() {
         Note: notes[Math.floor(rand() * notes.length)], Details: details[Math.floor(rand() * details.length)],
         Status: rand() < 0.82 ? STATUS_OK : STATUS_PENDING,
         InspectorName: inspectors[Math.floor(rand() * inspectors.length)],
-        Floor: floors[si % floors.length], Zone: zones[Math.floor(rand() * zones.length)], ReportURL: ''  // ข้อมูลจำลอง: ใบรายงานสร้างสดจากข้อมูล
+        Shift: shiftOf(d), Floor: floors[si % floors.length], Zone: zones[Math.floor(rand() * zones.length)], ReportURL: ''  // ข้อมูลจำลอง: ใบรายงานสร้างสดจากข้อมูล
       });
     }
   }
@@ -1432,6 +1451,16 @@ function renderFloorOptions() {
 }
 function syncFloorOther() { $('#fFloorOther').hidden = $('#fFloor').value !== OTHER_INSPECTOR; }
 const getFloor = () => $('#fFloor').value === OTHER_INSPECTOR ? $('#fFloorOther').value.trim() : $('#fFloor').value.trim();
+/** รอบการตรวจ: เลือกรอบตามเวลาปัจจุบันให้อัตโนมัติ แต่ผู้ตรวจเปลี่ยนเองได้ (เช่น บันทึกย้อนรอบก่อนหน้า) */
+function renderShiftOptions({ auto = false } = {}) {
+  const sel = $('#fShift'); if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = CONFIG.SHIFTS.map(sh => `<option value="${escapeHtml(sh.name)}">รอบ${escapeHtml(sh.name)} (${pad2(sh.from)}:00–${pad2(sh.to)}:00)</option>`).join('');
+  const now = shiftOf();
+  sel.value = (!auto && cur && CONFIG.SHIFTS.some(sh => sh.name === cur)) ? cur : now;
+  $('#fShiftHint').textContent = sel.value === now ? `เลือกอัตโนมัติจากเวลาปัจจุบัน (${fmtHMS(nowMall()).slice(0, 5)} น.)` : `เวลาปัจจุบันอยู่ในรอบ${now} — คุณเลือกบันทึกเป็นรอบ${sel.value}`;
+}
+const getShift = () => $('#fShift').value.trim();
 function renderInspectorOptions() {
   const sel = $('#fInspector');
   sel.innerHTML = `<option value="">— เลือกผู้ตรวจ (${nf(CONFIG.INSPECTORS.length)} รายชื่อ) —</option>`
@@ -1466,9 +1495,10 @@ async function handleSubmit() {
   if (state.saving) return; // กันกดซ้ำระหว่างกำลังส่ง
   const f = state.form;
   const storeName = $('#fStore').value.trim(), inspector = getInspector();
-  const floor = getFloor(), zone = $('#fZone').value.trim();
+  const floor = getFloor(), zone = $('#fZone').value.trim(), shift = getShift() || shiftOf();
   const need = (el, text) => { el.focus(); return dialog({ icon: 'warning', title: 'กรุณากรอกข้อมูลให้ครบถ้วน', text }); };
   if (!storeName) return need($('#fStore'), 'กรุณาระบุชื่อร้านค้า / สถานที่ตรวจ');
+  if (!shift) return need($('#fShift'), 'กรุณาเลือกรอบการตรวจ');
   if (!floor) return need($('#fFloor').value === OTHER_INSPECTOR ? $('#fFloorOther') : $('#fFloor'), 'กรุณาเลือกหรือระบุชั้นของจุดตรวจ');
   if (!inspector) return need($('#fInspector').value === OTHER_INSPECTOR ? $('#fInspectorOther') : $('#fInspector'), 'กรุณาเลือกหรือระบุชื่อผู้ตรวจ');
   if (f.processing) return toast('info', 'กรุณารอประมวลผลรูปภาพสักครู่');
@@ -1482,7 +1512,7 @@ async function handleSubmit() {
   if (!f.pendingId) f.pendingId = genId(now); // ส่งซ้ำหลังล้มเหลวจะใช้ ID เดิม → ไม่เกิดแถวซ้ำ
   const record = {
     ID: f.pendingId, Timestamp: tsReal.toISOString(), InspectionDate: fmtDMY(now), InspectionTime: fmtHMS(now),
-    InspectorName: inspector, Floor: floor, Zone: zone, StoreName: storeName,
+    InspectorName: inspector, Shift: shift, Floor: floor, Zone: zone, StoreName: storeName,
     Status: f.confirmed ? STATUS_OK : STATUS_PENDING,
     Note: $('#fNote').value.trim(), Details: $('#fDetails').value.trim(), ImageURL: '', ReportURL: ''
   };
@@ -1531,7 +1561,7 @@ async function handleSubmit() {
   } finally {
     state.saving = false; setBtnLoading(btn, false);
   }
-  if (saved) { store.set('insp_inspector', inspector); resetForm(); }
+  if (saved) { store.set('insp_inspector', inspector); resetForm(); renderShiftOptions({ auto: true }); }
   // เปิดหน้าต่างใบรายงานหลังคืนสถานะปุ่มแล้ว (ปุ่มไม่ค้าง "กำลังบันทึก" ระหว่างดูใบรายงาน)
   if (saved) await openReportViewer(reportUrl, saved, { justSaved: true, queued });
 }
@@ -1648,7 +1678,7 @@ async function buildReportImage(rec, photoSrc) {
   const tiles = [
     ['วันที่บันทึก', fmtDMY(d), fmtThaiLong(d, true), ['#e0f2fe', '#0369a1']],
     ['เวลาที่บันทึก', `${fmtHMS(d)} น.`, 'เวลาบันทึกอัตโนมัติ', ['#f3e8ff', '#7e22ce']],
-    ['ผู้ตรวจ', rec.InspectorName || '—', '', ['#dcfce7', '#15803d']],
+    ['ผู้ตรวจ', rec.InspectorName || '—', rec.Shift ? `รอบ${rec.Shift}` : '', ['#dcfce7', '#15803d']],
     ['ชั้น / โซน', [rec.Floor || '—', rec.Zone || '—'].join(' / '), '', ['#fef3c7', '#b45309']]
   ];
   const TW = (IW - 22) / 2;
@@ -1711,7 +1741,7 @@ function dataUrlToBlob(url) {
 function reportText(rec) {
   const d = rec._date;
   return [`📋 ใบรายงานการตรวจร้านค้า`, `🏬 ${rec.StoreName}`, floorZone(rec) ? `📍 ${floorZone(rec)}` : '',
-    `📅 ${d ? fmtDMY(d) : rec.InspectionDate} เวลา ${d ? fmtHMS(d) : rec.InspectionTime} น.`, `👤 ผู้ตรวจ: ${rec.InspectorName}`,
+    `📅 ${d ? fmtDMY(d) : rec.InspectionDate} เวลา ${d ? fmtHMS(d) : rec.InspectionTime} น.${rec.Shift ? ` (รอบ${rec.Shift})` : ''}`, `👤 ผู้ตรวจ: ${rec.InspectorName}`,
     `${isConfirmed(rec.Status) ? '✅' : '⏳'} สถานะ: ${isConfirmed(rec.Status) ? STATUS_OK : STATUS_PENDING}`,
     rec.Note ? `📝 หมายเหตุ: ${rec.Note}` : '', `รหัส: ${rec.ID}`].filter(Boolean).join('\n');
 }
@@ -1835,7 +1865,8 @@ async function buildDailyImage(D) {
     if (i % 2 === 0) { rrect(ctx, P + 16, ry - 6, IW - 32, ROW - 6, 16); ctx.fillStyle = '#f4f8f8'; ctx.fill(); }
     ctx.fillStyle = '#0891b2'; ctx.font = `700 28px ${RPT_FONT}`; ctx.fillText(fmtHMS(r._date).slice(0, 5), P + 32, ry + 16);
     ctx.fillStyle = '#11302d'; ctx.font = `600 28px ${RPT_FONT}`; ctx.fillText(wrapText(ctx, r.StoreName, IW - 420, 1)[0], P + 140, ry + 2);
-    ctx.fillStyle = '#5b726f'; ctx.font = `400 22px ${RPT_FONT}`; ctx.fillText(wrapText(ctx, `${floorZone(r) || '—'} · ${r.InspectorName}`, IW - 420, 1)[0], P + 140, ry + 42);
+    ctx.fillStyle = '#5b726f'; ctx.font = `400 22px ${RPT_FONT}`;
+    ctx.fillText(wrapText(ctx, [r.Shift ? `รอบ${r.Shift}` : '', floorZone(r), r.InspectorName].filter(Boolean).join(' · '), IW - 420, 1)[0], P + 140, ry + 42);
     const ok = r._ok, label = ok ? 'ยืนยันแล้ว' : 'รอยืนยัน';
     ctx.font = `600 22px ${RPT_FONT}`; const pw = ctx.measureText(label).width + 36, px = P + IW - 32 - pw;
     rrect(ctx, px, ry + 14, pw, 44, 22); ctx.fillStyle = ok ? '#d1fae5' : '#fef3c7'; ctx.fill();
@@ -1906,6 +1937,7 @@ function renderDetail(rec) {
         <div class="label mb-1">${icon('store')}ชื่อร้านค้า / สถานที่ตรวจ</div>
         <div class="text-2xl font-bold leading-snug break-words">${escapeHtml(rec.StoreName) || '—'}</div>
         <div class="flex flex-wrap gap-2 mt-2">
+          ${rec.Shift ? `<span class="badge" style="background:color-mix(in srgb,#f59e0b 16%,var(--surface));color:#b45309">${icon('clock')}รอบ${escapeHtml(rec.Shift)}</span>` : ''}
           ${rec.Floor ? `<span class="badge" style="background:color-mix(in srgb,#0891b2 14%,var(--surface));color:#0891b2">${icon('layers')}ชั้น ${escapeHtml(rec.Floor)}</span>` : ''}
           ${rec.Zone ? `<span class="badge" style="background:color-mix(in srgb,#7c3aed 14%,var(--surface));color:#7c3aed">${icon('grid')}โซน ${escapeHtml(rec.Zone)}</span>` : ''}
         </div>
@@ -2288,6 +2320,7 @@ function dailyData(day = state.dailyDate) {
     stores: new Set(list.map(r => r.StoreName.trim()).filter(Boolean)).size,
     inspectors: buildAgg(list, r => r.InspectorName.trim()),
     floors: buildAgg(list, r => r.Floor ? `ชั้น ${r.Floor}` : ''),
+    shifts: buildAgg(list, r => r.Shift ? `รอบ${r.Shift}` : '(ไม่ระบุรอบ)'),
     trend: trimHours(buildTrend('day', dayRange(day), list))
   };
 }
@@ -2297,7 +2330,9 @@ function renderDaily() {
   $('#dayLabel').textContent = fmtThaiLong(state.dailyDate, true);
   const stats = [
     ['ตรวจทั้งหมด', D.list.length, 'clipboard', '#0d9488'], ['ยืนยันแล้ว', D.ok, 'check-circle', '#059669'], ['รอยืนยัน', D.pending, 'hourglass', '#d97706'],
-    ['ร้านค้า/สถานที่', D.stores, 'store', '#6366f1'], ['ผู้ตรวจ', D.inspectors.total, 'user', '#c026d3']
+    ['ร้านค้า/สถานที่', D.stores, 'store', '#6366f1'],
+    [`รอบที่ตรวจแล้ว (จาก ${nf(CONFIG.SHIFTS.length)})`, new Set(D.list.map(r => r.Shift.trim()).filter(Boolean)).size, 'clock', '#0ea5e9'],
+    ['ผู้ตรวจ', D.inspectors.total, 'user', '#c026d3']
   ];
   $('#dailyStats').innerHTML = stats.map(([l, v, ic, c]) => `<div class="mini-stat fade-in" style="--c:${c}"><span class="mini-ic">${icon(ic)}</span><div><div class="text-xs muted">${l}</div><div class="text-2xl font-bold tabular-nums" style="color:${c}">${nf(v)}</div></div></div>`).join('');
   const empty = !D.list.length;
@@ -2305,7 +2340,7 @@ function renderDaily() {
   ['#btnDailyLine', '#btnDailyText', '#btnDailyPrint'].forEach(s => { $(s).disabled = empty; });
   if (empty) return;
   if (typeof Chart !== 'undefined') mountChart('hourly', '#chartHourly', trendConfig(D.trend, screenPalette()));
-  $('#dailyBreakdown').innerHTML = `<div class="text-xs font-bold muted mb-1">แยกตามชั้น</div>${rankRows(D.floors, { max: 5 })}<div class="text-xs font-bold muted mt-3 mb-1">แยกตามผู้ตรวจ</div>${rankRows(D.inspectors, { max: 5, colorOffset: 3 })}`;
+  $('#dailyBreakdown').innerHTML = `<div class="text-xs font-bold muted mb-1">แยกตามรอบการตรวจ</div>${rankRows(D.shifts, { max: 4, colorOffset: 8 })}<div class="text-xs font-bold muted mt-3 mb-1">แยกตามชั้น</div>${rankRows(D.floors, { max: 5 })}<div class="text-xs font-bold muted mt-3 mb-1">แยกตามผู้ตรวจ</div>${rankRows(D.inspectors, { max: 5, colorOffset: 3 })}`;
   $('#dailyCount').textContent = `${nf(D.list.length)} รายการ · เรียงตามเวลา`;
   $('#dailyTimeline').innerHTML = D.list.map(r => `
     <div class="tl-item" data-open="${escapeHtml(r.ID)}" role="button" tabindex="0">
@@ -2314,7 +2349,7 @@ function renderDaily() {
         ${thumbHtml(r)}
         <div class="min-w-0 flex-1">
           <div class="font-semibold truncate">${escapeHtml(r.StoreName)}</div>
-          <div class="text-xs muted truncate">${escapeHtml(floorZone(r) || '—')} · ${escapeHtml(r.InspectorName)}</div>
+          <div class="text-xs muted truncate">${escapeHtml([r.Shift ? `รอบ${r.Shift}` : '', floorZone(r)].filter(Boolean).join(' · ') || '—')} · ${escapeHtml(r.InspectorName)}</div>
           ${r.Note ? `<div class="text-xs truncate mt-0.5">${escapeHtml(r.Note)}</div>` : ''}
         </div>
         <div class="flex flex-col items-end gap-1">${statusBadge(r._ok)}${pendingBadge(r)}
@@ -2323,8 +2358,12 @@ function renderDaily() {
     </div>`).join('');
 }
 function dailyText(D) {
-  const lines = [`📊 สรุปการตรวจร้านค้าประจำวัน`, `📅 ${fmtThaiLong(D.day, true)}`, `✅ ตรวจทั้งหมด ${nf(D.list.length)} รายการ (ยืนยัน ${nf(D.ok)} · รอยืนยัน ${nf(D.pending)})`, `🏬 ร้านค้า/สถานที่ ${nf(D.stores)} แห่ง · 👤 ผู้ตรวจ ${nf(D.inspectors.total)} คน`, ''];
-  D.list.slice(0, 40).forEach((r, i) => lines.push(`${i + 1}. ${fmtHMS(r._date).slice(0, 5)} ${r.StoreName}${floorZone(r) ? ` (${floorZone(r)})` : ''} — ${r._ok ? '✅' : '⏳'} ${r.InspectorName}`));
+  const done = new Set(D.list.map(r => r.Shift.trim()).filter(Boolean));
+  const missing = CONFIG.SHIFTS.map(sh => sh.name).filter(n => !done.has(n));
+  const lines = [`📊 สรุปการตรวจร้านค้าประจำวัน`, `📅 ${fmtThaiLong(D.day, true)}`, `✅ ตรวจทั้งหมด ${nf(D.list.length)} รายการ (ยืนยัน ${nf(D.ok)} · รอยืนยัน ${nf(D.pending)})`,
+    `🕒 รอบที่ตรวจแล้ว: ${done.size ? [...done].map(n => `รอบ${n}`).join(', ') : '—'}${missing.length ? ` · ⚠️ ยังไม่มีรายการ: ${missing.map(n => `รอบ${n}`).join(', ')}` : ''}`,
+    `🏬 ร้านค้า/สถานที่ ${nf(D.stores)} แห่ง · 👤 ผู้ตรวจ ${nf(D.inspectors.total)} คน`, ''];
+  D.list.slice(0, 40).forEach((r, i) => lines.push(`${i + 1}. ${fmtHMS(r._date).slice(0, 5)} ${r.StoreName}${floorZone(r) ? ` (${floorZone(r)})` : ''}${r.Shift ? ` [รอบ${r.Shift}]` : ''} — ${r._ok ? '✅' : '⏳'} ${r.InspectorName}`));
   if (D.list.length > 40) lines.push(`… และอีก ${nf(D.list.length - 40)} รายการ`);
   lines.push('', `${CONFIG.APP_NAME} · ${CONFIG.ORG_NAME}`);
   return lines.join('\n');
@@ -2341,6 +2380,7 @@ function renderHistoryFilters(list) {
   const uniq = k => [...new Set(list.map(r => r[k].trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'));
   fill('#tStore', 'store', 'ทุกร้านค้า', uniq('StoreName'));
   fill('#tInspector', 'inspector', 'ผู้ตรวจทั้งหมด', uniq('InspectorName'));
+  fill('#tShift', 'shift', 'ทุกรอบการตรวจ', CONFIG.SHIFTS.map(sh => sh.name).filter(n => list.some(r => r.Shift.trim() === n)).concat(uniq('Shift').filter(n => !CONFIG.SHIFTS.some(sh => sh.name === n))));
 }
 function filteredRecords() {
   const { list } = periodRecords();
@@ -2348,9 +2388,10 @@ function filteredRecords() {
   return list.filter(r => {
     if (f.store && r.StoreName.trim() !== f.store) return false;
     if (f.inspector && r.InspectorName.trim() !== f.inspector) return false;
+    if (f.shift && r.Shift.trim() !== f.shift) return false;
     if (f.status === 'ok' && !r._ok) return false;
     if (f.status === 'pending' && r._ok) return false;
-    if (q && ![r.StoreName, r.InspectorName, r.Floor, r.Zone, r.Note, r.Details, r.ID].some(v => String(v).toLowerCase().includes(q))) return false;
+    if (q && ![r.StoreName, r.InspectorName, r.Shift, r.Floor, r.Zone, r.Note, r.Details, r.ID].some(v => String(v).toLowerCase().includes(q))) return false;
     return true;
   }).sort(byNewest);
 }
@@ -2367,7 +2408,7 @@ function renderTable() {
   $('#tBody').innerHTML = slice.map(r => `
     <tr data-id="${escapeHtml(r.ID)}">
       <td>${thumbHtml(r)}</td>
-      <td class="min-w-[10rem]"><div class="font-semibold leading-snug">${escapeHtml(r.StoreName) || '—'}</div><div class="text-xs muted">${floorZone(r) ? `<b style="color:var(--primary)">${escapeHtml(floorZone(r))}</b> · ` : ''}${escapeHtml(r.ID)}</div></td>
+      <td class="min-w-[10rem]"><div class="font-semibold leading-snug">${escapeHtml(r.StoreName) || '—'}</div><div class="text-xs muted">${r.Shift ? `<b style="color:#b45309">รอบ${escapeHtml(r.Shift)}</b> · ` : ''}${floorZone(r) ? `<b style="color:var(--primary)">${escapeHtml(floorZone(r))}</b> · ` : ''}${escapeHtml(r.ID)}</div></td>
       <td class="whitespace-nowrap"><div>${r._date ? fmtThaiShort(r._date) : escapeHtml(r.InspectionDate)}</div><div class="text-xs muted">${r._date ? fmtHMS(r._date) : escapeHtml(r.InspectionTime)} น.</div></td>
       <td>${escapeHtml(r.InspectorName) || '—'}</td>
       <td><div class="flex flex-col gap-1 items-start">${statusBadge(r._ok)}${pendingBadge(r)}</div></td>
@@ -2381,7 +2422,7 @@ function renderTable() {
       ${thumbHtml(r, 'thumb thumb-lg')}
       <div class="min-w-0 flex-1">
         <div class="font-semibold leading-snug truncate">${escapeHtml(r.StoreName) || '—'}</div>
-        <div class="text-xs muted truncate">${escapeHtml(floorZone(r) || '—')} · ${escapeHtml(r.InspectorName)}</div>
+        <div class="text-xs muted truncate">${escapeHtml([r.Shift ? `รอบ${r.Shift}` : '', floorZone(r)].filter(Boolean).join(' · ') || '—')} · ${escapeHtml(r.InspectorName)}</div>
         <div class="text-xs muted">${dt(r)}</div>
         <div class="flex items-center gap-1 mt-1 flex-wrap">${statusBadge(r._ok)}${pendingBadge(r)}</div>
       </div>
@@ -2472,7 +2513,12 @@ function execSummary(list, { label, prevCount = null } = {}) {
     stores.rows.length ? `ร้านค้า/สถานที่ที่ตรวจบ่อยที่สุดคือ <b>${escapeHtml(stores.rows[0][0])}</b> จำนวน ${nf(stores.rows[0][1])} ครั้ง` : '',
     floors.rows.length ? `พื้นที่ที่มีการตรวจมากที่สุดคือ <b>${escapeHtml(floors.rows[0][0])}</b> จำนวน ${nf(floors.rows[0][1])} ครั้ง` : '',
     `ช่วงเวลาที่มีการตรวจหนาแน่นที่สุดคือเวลา <b>${pad2(peak)}:00–${pad2((peak + 1) % 24)}:00 น.</b> (${nf(hours[peak])} รายการ)`,
-    pendingFloors.rows.length ? `พื้นที่ที่มีรายการรอยืนยันมากที่สุดคือ <b>${escapeHtml(pendingFloors.rows[0][0])}</b> จำนวน ${nf(pendingFloors.rows[0][1])} รายการ ควรติดตามให้ครบถ้วน` : ''
+    pendingFloors.rows.length ? `พื้นที่ที่มีรายการรอยืนยันมากที่สุดคือ <b>${escapeHtml(pendingFloors.rows[0][0])}</b> จำนวน ${nf(pendingFloors.rows[0][1])} รายการ ควรติดตามให้ครบถ้วน` : '',
+    (() => {
+      const done = new Set(list.map(r => r.Shift.trim()).filter(Boolean));
+      const miss = CONFIG.SHIFTS.map(sh => sh.name).filter(n => !done.has(n));
+      return `รอบการตรวจที่มีการบันทึก: <b>${done.size ? [...done].map(n => `รอบ${n}`).join(', ') : '—'}</b>${miss.length ? ` — <b>ยังไม่พบรายการในรอบ${miss.join(', รอบ')}</b> ควรตรวจสอบการปฏิบัติงาน` : ' ครบทุกรอบ'}`;
+    })()
   ].filter(Boolean);
   return `<div class="pr-summary"><div class="pr-summary-title">บทสรุปสำหรับผู้บริหาร</div><ol>${items.map(t => `<li>${t}</li>`).join('')}</ol></div>`;
 }
@@ -2513,9 +2559,9 @@ async function printReport() {
         <figure><figcaption>จำนวนการตรวจแยกตามร้านค้า (10 อันดับแรก)</figcaption><img src="${storeImg}" alt=""></figure>
       </div>
       <div style="font-weight:700;color:#2f6f68;margin:4px 0 6px">รายการตรวจ ${nf(rows.length)} รายการ${filterText ? ` <span class="pr-sub" style="font-weight:400">(กรอง: ${filterText})</span>` : ''}</div>
-      <table class="pr-table"><thead><tr><th style="width:5%">ลำดับ</th><th style="width:11%">วันที่</th><th style="width:8%">เวลา</th><th>ร้านค้า / สถานที่</th><th style="width:11%">ชั้น / โซน</th><th style="width:15%">ผู้ตรวจ</th><th style="width:9%">สถานะ</th><th style="width:18%">หมายเหตุ</th></tr></thead>
-      <tbody>${rows.length ? rows.map((r, i) => `<tr><td style="text-align:center">${i + 1}</td><td>${r._date ? fmtDMY(r._date) : escapeHtml(r.InspectionDate)}</td><td>${r._date ? fmtHMS(r._date) : escapeHtml(r.InspectionTime)}</td><td>${escapeHtml(r.StoreName)}</td><td>${escapeHtml([r.Floor, r.Zone].filter(Boolean).join(' / ')) || '—'}</td><td>${escapeHtml(r.InspectorName)}</td><td>${r._ok ? 'ยืนยันแล้ว' : 'รอยืนยัน'}</td><td>${escapeHtml(r.Note)}</td></tr>`).join('') : `<tr><td colspan="8" style="text-align:center;padding:14px">ไม่มีรายการตรวจในช่วงเวลานี้</td></tr>`}</tbody>
-      ${rows.length ? `<tfoot><tr><td colspan="6" style="text-align:right;font-weight:700">รวมทั้งสิ้น</td><td style="font-weight:700">${nf(rows.filter(r => r._ok).length)} / ${nf(rows.length)}</td><td></td></tr></tfoot>` : ''}</table>
+      <table class="pr-table"><thead><tr><th style="width:5%">ลำดับ</th><th style="width:11%">วันที่</th><th style="width:8%">เวลา</th><th>ร้านค้า / สถานที่</th><th style="width:8%">รอบ</th><th style="width:10%">ชั้น / โซน</th><th style="width:14%">ผู้ตรวจ</th><th style="width:9%">สถานะ</th><th style="width:15%">หมายเหตุ</th></tr></thead>
+      <tbody>${rows.length ? rows.map((r, i) => `<tr><td style="text-align:center">${i + 1}</td><td>${r._date ? fmtDMY(r._date) : escapeHtml(r.InspectionDate)}</td><td>${r._date ? fmtHMS(r._date) : escapeHtml(r.InspectionTime)}</td><td>${escapeHtml(r.StoreName)}</td><td>${escapeHtml(r.Shift) || '—'}</td><td>${escapeHtml([r.Floor, r.Zone].filter(Boolean).join(' / ')) || '—'}</td><td>${escapeHtml(r.InspectorName)}</td><td>${r._ok ? 'ยืนยันแล้ว' : 'รอยืนยัน'}</td><td>${escapeHtml(r.Note)}</td></tr>`).join('') : `<tr><td colspan="9" style="text-align:center;padding:14px">ไม่มีรายการตรวจในช่วงเวลานี้</td></tr>`}</tbody>
+      ${rows.length ? `<tfoot><tr><td colspan="7" style="text-align:right;font-weight:700">รวมทั้งสิ้น</td><td style="font-weight:700">${nf(rows.filter(r => r._ok).length)} / ${nf(rows.length)}</td><td></td></tr></tfoot>` : ''}</table>
       <div class="pr-foot">${escapeHtml(CONFIG.ORG_NAME)} · ${escapeHtml(CONFIG.DEPT_NAME)} — จัดทำโดยระบบ ${escapeHtml(CONFIG.APP_NAME)} จากข้อมูลที่บันทึกจริงในระบบ</div>`;
     await doPrint();
   } catch (err) {
@@ -2535,6 +2581,7 @@ async function printSlip() {
       <tr><th>เวลาที่บันทึก</th><td>${d ? fmtHMS(d) : escapeHtml(r.InspectionTime)} น.</td></tr>
       <tr><th>ผู้ตรวจ</th><td>${escapeHtml(r.InspectorName) || '—'}</td></tr>
       <tr><th>สถานะ</th><td>${r._ok ? '✔ ยืนยันจุดตรวจแล้ว' : 'รอยืนยันจุดตรวจ'}</td></tr>
+      <tr><th>รอบการตรวจ</th><td>${escapeHtml(r.Shift) ? `รอบ${escapeHtml(r.Shift)}` : '—'}</td></tr>
       <tr><th>ชั้น / โซน</th><td>${escapeHtml([r.Floor && `ชั้น ${r.Floor}`, r.Zone && `โซน ${r.Zone}`].filter(Boolean).join('  ·  ')) || '—'}</td></tr>
       <tr><th>หมายเหตุ</th><td>${escapeHtml(r.Note) || '—'}</td></tr>
       <tr><th>รายละเอียดเพิ่มเติม</th><td>${escapeHtml(r.Details) || '—'}</td></tr>
@@ -2565,11 +2612,11 @@ async function printDaily() {
       ${execSummary(D.list, { label: 'วันนี้', prevCount: countIn(state.records, dayRange(addDays(D.day, -1))) })}
       <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:8px;margin-bottom:10px">
         <figure style="margin:0;border:1px solid #e1e5e3;border-radius:8px;padding:6px"><figcaption style="font-size:9pt;font-weight:600;color:#0d9488">จำนวนการตรวจรายชั่วโมง</figcaption><img src="${hourImg}" style="width:100%" alt=""></figure>
-        <div style="display:grid;gap:6px;align-content:start">${aggTable('ชั้น', D.floors)}${aggTable('ผู้ตรวจ', D.inspectors)}</div>
+        <div style="display:grid;gap:6px;align-content:start">${aggTable('รอบการตรวจ', D.shifts)}${aggTable('ชั้น', D.floors)}${aggTable('ผู้ตรวจ', D.inspectors)}</div>
       </div>
       <div style="font-weight:700;color:#0d9488;margin:4px 0 6px">รายการตรวจ ${nf(D.list.length)} รายการ (เรียงตามเวลา)</div>
-      <table class="pr-table"><thead><tr><th style="width:5%">ลำดับ</th><th style="width:8%">เวลา</th><th style="width:12%">รูป</th><th>ร้านค้า / สถานที่</th><th style="width:11%">ชั้น / โซน</th><th style="width:15%">ผู้ตรวจ</th><th style="width:9%">สถานะ</th><th style="width:18%">หมายเหตุ</th></tr></thead>
-      <tbody>${D.list.map((r, i) => `<tr><td style="text-align:center">${i + 1}</td><td>${fmtHMS(r._date)}</td><td>${r.ImageURL ? `<img src="${escapeHtml(imgUrl(r.ImageURL, 300))}" referrerpolicy="no-referrer" style="width:100%;height:14mm;object-fit:cover;border-radius:4px" alt="">` : '—'}</td><td>${escapeHtml(r.StoreName)}</td><td>${escapeHtml([r.Floor, r.Zone].filter(Boolean).join(' / ')) || '—'}</td><td>${escapeHtml(r.InspectorName)}</td><td>${r._ok ? 'ยืนยันแล้ว' : 'รอยืนยัน'}</td><td>${escapeHtml(r.Note)}</td></tr>`).join('')}</tbody></table>
+      <table class="pr-table"><thead><tr><th style="width:5%">ลำดับ</th><th style="width:8%">เวลา</th><th style="width:11%">รูป</th><th>ร้านค้า / สถานที่</th><th style="width:7%">รอบ</th><th style="width:10%">ชั้น / โซน</th><th style="width:15%">ผู้ตรวจ</th><th style="width:9%">สถานะ</th><th style="width:18%">หมายเหตุ</th></tr></thead>
+      <tbody>${D.list.map((r, i) => `<tr><td style="text-align:center">${i + 1}</td><td>${fmtHMS(r._date)}</td><td>${r.ImageURL ? `<img src="${escapeHtml(imgUrl(r.ImageURL, 300))}" referrerpolicy="no-referrer" style="width:100%;height:14mm;object-fit:cover;border-radius:4px" alt="">` : '—'}</td><td>${escapeHtml(r.StoreName)}</td><td>${escapeHtml(r.Shift) || '—'}</td><td>${escapeHtml([r.Floor, r.Zone].filter(Boolean).join(' / ')) || '—'}</td><td>${escapeHtml(r.InspectorName)}</td><td>${r._ok ? 'ยืนยันแล้ว' : 'รอยืนยัน'}</td><td>${escapeHtml(r.Note)}</td></tr>`).join('')}</tbody></table>
       <div class="pr-foot">${escapeHtml(CONFIG.ORG_NAME)} · ${escapeHtml(CONFIG.DEPT_NAME)} — จัดทำโดยระบบ ${escapeHtml(CONFIG.APP_NAME)} จากข้อมูลที่บันทึกจริงในระบบ</div>`;
     await doPrint();
   } catch (err) { dialog({ icon: 'error', title: 'จัดทำรายงานไม่สำเร็จ', text: err.message }); }
@@ -2774,6 +2821,7 @@ function handleEvents() {
   $('#confirmToggle').addEventListener('click', () => { state.form.confirmed = !state.form.confirmed; renderConfirm(); if (navigator.vibrate) navigator.vibrate(15); });
   $('#fInspector').addEventListener('change', () => { syncInspectorOther(); if ($('#fInspector').value === OTHER_INSPECTOR) $('#fInspectorOther').focus(); });
   $('#fFloor').addEventListener('change', () => { syncFloorOther(); if ($('#fFloor').value === OTHER_INSPECTOR) $('#fFloorOther').focus(); });
+  $('#fShift').addEventListener('change', () => renderShiftOptions());
   $('#detailReportBtn').addEventListener('click', () => { if (state.currentDetail) openRecordReport(state.currentDetail); });
   $('#btnSubmit').addEventListener('click', handleSubmit);
   // Detail
@@ -2804,6 +2852,7 @@ function handleEvents() {
   $('#tSearch').addEventListener('input', e => { clearTimeout(tSearch); tSearch = setTimeout(() => { state.filters.q = e.target.value; state.page = 1; renderTable(); }, 200); }); // debounce: ไม่ render ทุกตัวอักษร
   $('#tStore').addEventListener('change', e => { state.filters.store = e.target.value; state.page = 1; renderTable(); });
   $('#tInspector').addEventListener('change', e => { state.filters.inspector = e.target.value; state.page = 1; renderTable(); });
+  $('#tShift').addEventListener('change', e => { state.filters.shift = e.target.value; state.page = 1; renderTable(); });
   $('#tStatus').addEventListener('change', e => { state.filters.status = e.target.value; state.page = 1; renderTable(); });
   $('#tPager').addEventListener('click', e => { const b = e.target.closest('[data-page]'); if (!b || b.disabled) return; state.page = +b.dataset.page; renderTable(); $('[data-pane="history"]').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
   $('#btnCsv').addEventListener('click', exportCSV);
@@ -2841,7 +2890,7 @@ function init() {
   renderSyncBadge();
   checkLibraries();
   handleEvents();
-  renderInspectorOptions(); renderFloorOptions();
+  renderInspectorOptions(); renderFloorOptions(); renderShiftOptions({ auto: true });
   updateClock(); setInterval(updateClock, 1000);
   renderPhoto(); renderConfirm();
   showView('form');
