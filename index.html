@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ============================================================================
-   SBK Store Inspect — ระบบบันทึกการตรวจร้านค้า & แดชบอร์ดสรุปผล   SCI_Dashboard_v9.html v9.0 — แอปแดชบอร์ดสรุปผล (บันทึกการตรวจได้ด้วย) · โทนคราม–ม่วง
+   SBK Store Inspect — ระบบบันทึกการตรวจร้านค้า & แดชบอร์ดสรุปผล   SCI_Dashboard_v10.html v10.0 — แอปแดชบอร์ดสรุปผล (บันทึกการตรวจได้ด้วย) · โทนคราม–ม่วง
    v4.0: แดชบอร์ดโฉมใหม่ 3 แท็บ (ภาพรวม / รายงานรายวัน / ประวัติ), รายงานประจำวัน (LINE + A4),
          เชื่อมต่อทนทานขึ้น (retry, fetch→JSONP สำรอง, แคช, Outbox ออฟไลน์, รีเฟรชอัตโนมัติ)
    v3.0: รายชื่อผู้ตรวจ, ชั้น/โซน, ตัด GPS, ฝัง URL Web App, ใบรายงาน LINE (ดูตัวอย่างก่อนบันทึก,
@@ -403,7 +403,6 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
       <div class="text-xs muted leading-tight truncate" id="orgLabel">Store Inspection</div>
     </div>
     <nav class="hidden md:flex items-center gap-1 ml-6 flex-1">
-      <button class="nav-tab" data-nav="form"><span data-icon="camera"></span>บันทึกการตรวจ</button>
       <button class="nav-tab" data-nav="dashboard"><span data-icon="chart"></span>แดชบอร์ดสรุปผล</button>
     </nav>
     <button id="syncBadge" class="sync-badge" type="button" title="สถานะการเชื่อมต่อ"></button>
@@ -413,107 +412,6 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
 
 <main class="max-w-6xl mx-auto px-4 pt-5 pb-28 md:pb-12">
 
-  <!-- ═══════════════════════ VIEW: FORM (บันทึกการตรวจ) ═══════════════════════ -->
-  <section id="view-form" class="fade-in">
-    <div class="page-head">
-      <button class="icon-btn" id="formBackBtn" title="ย้อนกลับ" aria-label="ย้อนกลับ" data-icon="arrow-left"></button>
-      <div class="flex-1 min-w-0">
-        <h1>รายละเอียดจุดตรวจ</h1>
-        <div class="text-xs muted">บันทึกการตรวจร้านค้าใหม่</div>
-      </div>
-      <button class="icon-btn danger" id="formClearBtn" title="ลบข้อมูลในฟอร์ม" aria-label="ลบข้อมูลในฟอร์ม" data-icon="trash"></button>
-    </div>
-
-    <div class="grid lg:grid-cols-2 gap-5">
-      <!-- คอลัมน์ซ้าย: ร้านค้า + รูปภาพ -->
-      <div class="space-y-5">
-        <div class="card card-accent p-5 space-y-4">
-          <div>
-            <label class="label mb-1.5" for="fStore"><span data-icon="store"></span>ชื่อร้านค้า / สถานที่ตรวจ <span style="color:var(--danger)">*</span></label>
-            <input id="fStore" class="input input-hero" list="storeList" maxlength="200" autocomplete="off" placeholder="ระบุชื่อร้านค้าหรือสถานที่">
-            <datalist id="storeList"></datalist>
-          </div>
-          <div>
-            <label class="label mb-1.5" for="fShift"><span data-icon="clock"></span>รอบการตรวจ <span style="color:var(--danger)">*</span></label>
-            <select id="fShift" class="input"></select>
-            <div class="text-xs muted mt-1" id="fShiftHint"></div>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="label mb-1.5" for="fFloor"><span data-icon="layers"></span>ชั้น <span style="color:var(--danger)">*</span></label>
-              <select id="fFloor" class="input"></select>
-              <input id="fFloorOther" class="input mt-2" maxlength="50" autocomplete="off" placeholder="ระบุชั้นเอง" hidden>
-            </div>
-            <div>
-              <label class="label mb-1.5" for="fZone"><span data-icon="grid"></span>โซน</label>
-              <input id="fZone" class="input" list="zoneList" maxlength="80" autocomplete="off" placeholder="เช่น A, ฝั่งทิศเหนือ">
-              <datalist id="zoneList"></datalist>
-            </div>
-          </div>
-          <div>
-            <label class="label mb-1.5" for="fInspector"><span data-icon="user"></span>ผู้ตรวจ <span style="color:var(--danger)">*</span></label>
-            <select id="fInspector" class="input"></select>
-            <input id="fInspectorOther" class="input mt-2" maxlength="120" autocomplete="name" placeholder="พิมพ์ชื่อ-นามสกุล ผู้ตรวจ" hidden>
-          </div>
-        </div>
-
-        <div class="card p-4">
-          <div class="flex items-center justify-between mb-3 px-1">
-            <span class="label"><span data-icon="image"></span>รูปภาพจุดตรวจ <span style="color:var(--danger)">*</span></span>
-            <span id="photoMeta" class="text-xs muted"></span>
-          </div>
-          <div id="photoBox" class="photo-box" role="button" tabindex="0" aria-label="ถ่ายภาพจุดตรวจ"></div>
-          <div class="grid grid-cols-2 gap-2 mt-3">
-            <button class="btn btn-soft" id="btnCamera"><span data-icon="camera"></span>ถ่ายภาพ</button>
-            <button class="btn btn-ghost" id="btnGallery"><span data-icon="image"></span>เลือกรูปภาพ</button>
-          </div>
-          <button class="btn btn-danger w-full mt-2" id="btnRemovePhoto" hidden><span data-icon="x"></span>ลบรูปภาพนี้</button>
-          <!-- capture="environment" = เปิดกล้องหลังบนมือถือทันที; อีกช่องไม่ใส่ capture เพื่อให้เลือกจากคลังภาพได้ -->
-          <input type="file" id="fileCamera" accept="image/*" capture="environment" hidden>
-          <input type="file" id="fileGallery" accept="image/*" hidden>
-        </div>
-      </div>
-
-      <!-- คอลัมน์ขวา: เวลา / รายละเอียด / ยืนยัน / บันทึก -->
-      <div class="space-y-5">
-        <div class="grid grid-cols-2 gap-3">
-          <div class="tile tile-sky">
-            <div class="label"><span data-icon="calendar"></span>วันที่บันทึก</div>
-            <div class="tile-value" id="fDate">--/--/----</div>
-            <div class="text-xs muted truncate" id="fDateLong">&nbsp;</div>
-          </div>
-          <div class="tile tile-violet">
-            <div class="label"><span data-icon="clock"></span>เวลาที่บันทึก</div>
-            <div class="tile-value" id="fTime">--:--:--</div>
-            <div class="text-xs muted truncate">ใช้เวลาปัจจุบันอัตโนมัติ</div>
-          </div>
-        </div>
-
-        <div class="card p-5 space-y-4">
-          <div>
-            <label class="label mb-1.5" for="fNote"><span data-icon="note"></span>หมายเหตุ</label>
-            <input id="fNote" class="input" maxlength="1000" placeholder="เช่น ปกติ / พบข้อบกพร่อง">
-          </div>
-          <div>
-            <label class="label mb-1.5" for="fDetails"><span data-icon="note"></span>รายละเอียดเพิ่มเติม</label>
-            <textarea id="fDetails" class="input" rows="4" maxlength="5000" placeholder="บรรยายรายละเอียดสิ่งที่ตรวจพบ การแก้ไข หรือข้อเสนอแนะ"></textarea>
-          </div>
-        </div>
-
-        <button class="confirm-card interactive" id="confirmToggle" role="switch" aria-checked="false">
-          <span class="check-dot" data-icon="check"></span>
-          <span class="flex-1 min-w-0">
-            <span class="block font-bold" id="confirmTitle">ยังไม่ยืนยันจุดตรวจ</span>
-            <span class="block text-sm muted" id="confirmSub">แตะเพื่อยืนยันว่าได้ตรวจจุดนี้เรียบร้อยแล้ว</span>
-          </span>
-        </button>
-
-        <button class="btn btn-primary btn-lg w-full" id="btnSubmit"><span data-icon="file"></span>ดูตัวอย่างใบรายงาน &amp; บันทึก</button>
-        <div class="text-xs muted text-center -mt-2">ระบบจะแสดงใบรายงานสำหรับส่ง LINE ให้ตรวจสอบก่อนบันทึกจริง</div>
-      </div>
-    </div>
-  </section>
-
   <!-- ═══════════════════════ VIEW: DETAIL (ดูรายการที่บันทึกแล้ว) ═══════════════════════ -->
   <section id="view-detail" hidden>
     <div class="page-head">
@@ -522,7 +420,7 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
         <h1>รายละเอียดจุดตรวจ</h1>
         <div class="text-xs muted truncate" id="detailId">—</div>
       </div>
-      <button class="icon-btn" id="detailReportBtn" title="ใบรายงาน LINE" aria-label="ใบรายงาน LINE" data-icon="file" style="color:#06c755"></button>
+      <button class="icon-btn" id="detailReportBtn" title="ใบรายงานการตรวจ" aria-label="ใบรายงานการตรวจ" data-icon="file" style="color:#06c755"></button>
       <button class="icon-btn" id="detailPrintBtn" title="พิมพ์ใบสรุปการตรวจ" aria-label="พิมพ์" data-icon="printer"></button>
       <button class="icon-btn danger" id="detailDeleteBtn" title="ลบข้อมูล" aria-label="ลบข้อมูล" data-icon="trash"></button>
     </div>
@@ -627,7 +525,7 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
           </div>
           <div class="font-bold lg:ml-2" id="dayLabel">—</div>
           <div class="flex flex-wrap gap-2 lg:ml-auto">
-            <button class="btn" id="btnDailyLine" style="background:#06c755;color:#fff"><span data-icon="share"></span>ใบสรุปประจำวัน (LINE)</button>
+            <button class="btn" id="btnDailyLine" style="background:#06c755;color:#fff"><span data-icon="file"></span>ใบสรุปประจำวัน (รูปภาพ)</button>
             <button class="btn btn-ghost" id="btnDailyText"><span data-icon="message"></span>ข้อความสรุป</button>
             <button class="btn btn-ghost" id="btnDailyPrint"><span data-icon="printer"></span>พิมพ์ A4</button>
           </div>
@@ -660,7 +558,7 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
       <div data-pane="history" hidden>
         <div class="card overflow-hidden">
           <div class="p-4 flex flex-col lg:flex-row lg:items-center gap-3 border-b" style="border-color:var(--border)">
-            <div class="flex-1"><div class="card-title">ประวัติการตรวจย้อนหลัง <span class="text-xs muted font-normal" id="tableCount"></span></div><div class="card-sub">แตะรายการเพื่อดูรายละเอียด · ปุ่มใบรายงานเพื่อดู / บันทึก / ส่ง LINE</div></div>
+            <div class="flex-1"><div class="card-title">ประวัติการตรวจย้อนหลัง <span class="text-xs muted font-normal" id="tableCount"></span></div><div class="card-sub">แตะรายการเพื่อดูรายละเอียด · ปุ่มใบรายงานเพื่อดู / บันทึกไฟล์</div></div>
             <div class="flex gap-2">
               <button class="btn btn-ghost" id="btnCsv"><span data-icon="download"></span>CSV</button>
               <button class="btn btn-ghost" id="btnJson"><span data-icon="download"></span>JSON</button>
@@ -702,11 +600,7 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
   </section>
 </main>
 
-<!-- Mobile bottom navigation -->
-<nav class="bottom-nav md:hidden">
-  <button data-nav="form"><span data-icon="camera"></span>บันทึกการตรวจ</button>
-  <button data-nav="dashboard"><span data-icon="chart"></span>แดชบอร์ด</button>
-</nav>
+<!-- แอปแดชบอร์ดมีหน้าเดียว จึงไม่ต้องมีแถบเมนูล่าง -->
 
 <div id="libError" hidden></div>
 <div id="printChartHolder"></div>
@@ -737,7 +631,7 @@ const CONFIG = {
   ],
   FLOORS: ['B', '1', '2', '3', '4', '5', '6'],   // ตัวเลือกชั้นมาตรฐาน (เพิ่ม/ลดได้) + มีตัวเลือก "อื่นๆ" ให้พิมพ์เอง
   ZONES: [],
-  REPORT_QUALITY: 0.88,         // คุณภาพ JPEG ของใบรายงาน LINE (ไฟล์ ~200–400KB ส่งใน LINE ได้คมชัด)
+  REPORT_QUALITY: 0.88,         // คุณภาพ JPEG ของใบรายงาน (ไฟล์ ~200–400KB คมชัดพอสำหรับส่งต่อ/พิมพ์)
   ORG_NAME: 'ศูนย์การค้าซีคอนบางแค',
   DEPT_NAME: 'แผนกรักษาความปลอดภัย',
   REPORT_TITLE: 'รายงานสรุปผลการตรวจจุดตรวจร้านค้า',
@@ -1350,6 +1244,11 @@ function dialog(opts) {
   if (typeof Swal === 'undefined') return Promise.resolve({ isConfirmed: window.confirm(`${opts.title || ''}\n${(opts.text || '').replace(/<[^>]+>/g, '')}`) });
   return Swal.fire({ ...swalBase(), ...opts });
 }
+function openPhotoPreview(src, title) {
+  if (!src || typeof Swal === 'undefined') return;
+  Swal.fire({ imageUrl: src, imageAlt: title || 'รูปภาพ', title: title ? escapeHtml(title) : undefined, width: 'min(92vw, 900px)', showConfirmButton: false, showCloseButton: true, padding: '1rem' });
+}
+
 function setBtnLoading(btn, loading, loadingText) {
   if (loading) {
     btn.dataset.html = btn.innerHTML; btn.disabled = true;
@@ -1360,214 +1259,12 @@ function setBtnLoading(btn, loading, loadingText) {
 }
 
 /* =============================================================================
-   8) FORM — บันทึกการตรวจ
+   8) (แอปแดชบอร์ดไม่มีหน้าบันทึกการตรวจ — ใช้แอปฟอร์ม SCI_Form_v10.html สำหรับบันทึก)
    ============================================================================= */
-function updateClock() {
-  const now = nowMall();
-  $('#fDate').textContent = fmtDMY(now);
-  $('#fDateLong').textContent = fmtThaiLong(now, true);
-  $('#fTime').textContent = fmtHMS(now);
-  if (Splash.visible) Splash.tick(now);
-}
-
-function renderPhoto() {
-  const box = $('#photoBox'); const img = state.form.image;
-  box.classList.toggle('has-img', !!img);
-  let html = img
-    ? `<img src="${img.dataUrl}" alt="รูปภาพจุดตรวจ">`
-    : `<div class="text-center px-6 muted"><div class="mx-auto mb-2 w-14 h-14 rounded-2xl grid place-items-center" style="background:var(--grad-brand);color:#fff;box-shadow:0 10px 22px -10px rgba(8,145,178,.8)">${icon('camera', 'w-7 h-7')}</div><div class="font-semibold" style="color:var(--text)">แตะเพื่อถ่ายภาพจุดตรวจ</div><div class="text-xs mt-0.5">รองรับ JPG / PNG / WEBP · ระบบย่อขนาดให้อัตโนมัติ</div></div>`;
-  if (state.form.processing) html += `<div class="photo-overlay"><div class="flex items-center gap-2 font-semibold" style="color:var(--primary)"><span class="spinner"></span>กำลังประมวลผลรูปภาพ…</div></div>`;
-  box.innerHTML = html;
-  $('#photoMeta').textContent = img ? `${img.w}×${img.h}px · ${(img.bytes / 1024).toFixed(0)} KB` : '';
-  $('#btnRemovePhoto').hidden = !img;
-}
-
-/** ย่อ + บีบอัดรูปด้วย canvas → JPEG ก่อนส่ง
-    เหตุผล: รูปกล้องมือถือ 3–8MB ทำให้อัปโหลดช้าและเกิน payload ของ Apps Script
-    เบราว์เซอร์รุ่นใหม่หมุนรูปตาม EXIF ให้แล้วตอน drawImage จึงไม่ต้องอ่าน EXIF เอง */
-function compressImage(file) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const scale = Math.min(1, CONFIG.IMAGE_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
-        const w = Math.max(1, Math.round(img.naturalWidth * scale)), h = Math.max(1, Math.round(img.naturalHeight * scale));
-        const c = document.createElement('canvas'); c.width = w; c.height = h;
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); // PNG โปร่งใส → พื้นขาว ไม่กลายเป็นดำเมื่อแปลง JPEG
-        ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = c.toDataURL('image/jpeg', CONFIG.IMAGE_QUALITY);
-        resolve({ dataUrl, w, h, bytes: Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4) });
-      } catch (e) { reject(new Error('ประมวลผลรูปภาพไม่สำเร็จ กรุณาเลือกรูปอื่น')); }
-      finally { URL.revokeObjectURL(url); }
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('ไม่สามารถอ่านไฟล์รูปภาพนี้ได้ (รองรับ JPG, PNG, WEBP) — หากเป็นไฟล์ HEIC กรุณาถ่ายผ่านปุ่ม "ถ่ายภาพ" แทน')); };
-    img.src = url;
-  });
-}
-async function handleFile(e) {
-  const file = e.target.files && e.target.files[0];
-  e.target.value = ''; // reset เพื่อให้เลือกไฟล์เดิมซ้ำได้ (change event จะยิงอีกครั้ง)
-  if (!file) return;
-  if (!/^image\//.test(file.type) && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)) { toast('error', 'กรุณาเลือกไฟล์รูปภาพเท่านั้น'); return; }
-  state.form.processing = true; renderPhoto();
-  try {
-    state.form.image = await compressImage(file);
-    toast('success', 'แนบรูปภาพเรียบร้อย');
-  } catch (err) {
-    dialog({ icon: 'error', title: 'แนบรูปภาพไม่สำเร็จ', text: err.message });
-  } finally {
-    state.form.processing = false; renderPhoto();
-  }
-}
-function openPhotoPreview(src, title) {
-  if (!src || typeof Swal === 'undefined') return;
-  Swal.fire({ imageUrl: src, imageAlt: title || 'รูปภาพ', title: title ? escapeHtml(title) : undefined, width: 'min(92vw, 900px)', showConfirmButton: false, showCloseButton: true, padding: '1rem' });
-}
-
-function renderConfirm() {
-  const on = state.form.confirmed; const el = $('#confirmToggle');
-  el.classList.toggle('on', on); el.setAttribute('aria-checked', String(on));
-  $('#confirmTitle').textContent = on ? 'ยืนยันจุดตรวจแล้ว' : 'ยังไม่ยืนยันจุดตรวจ';
-  $('#confirmSub').textContent = on ? 'สถานะจะถูกบันทึกเป็น "ยืนยันแล้ว"' : 'แตะเพื่อยืนยันว่าได้ตรวจจุดนี้เรียบร้อยแล้ว';
-}
-
-/* ---------- ผู้ตรวจ / ชั้น / โซน ---------- */
-const OTHER_INSPECTOR = '__other__';
-/** ชั้น: ใช้ตัวเลือกมาตรฐาน + ชั้นที่เคยบันทึกจริงในชีต (เผื่อมีชั้นพิเศษ) + ระบุเอง */
-function renderFloorOptions() {
-  const sel = $('#fFloor'); if (!sel) return;
-  const cur = sel.value, other = $('#fFloorOther').value.trim();
-  const fromData = state.records.map(r => String(r.Floor || '').trim()).filter(Boolean);
-  const list = [...new Set(CONFIG.FLOORS.map(String).concat(fromData))];
-  sel.innerHTML = '<option value="">— เลือกชั้น —</option>'
-    + list.map(n => `<option value="${escapeHtml(n)}">ชั้น ${escapeHtml(n)}</option>`).join('')
-    + `<option value="${OTHER_INSPECTOR}">อื่นๆ (ระบุเอง)</option>`;
-  // รักษาค่าที่ผู้ใช้เลือกไว้ตอน re-render (เช่นเมื่อโหลดข้อมูลเสร็จแล้วรายการชั้นเพิ่มขึ้น)
-  if (cur && [...sel.options].some(o => o.value === cur)) sel.value = cur;
-  else if (other) sel.value = OTHER_INSPECTOR;
-  syncFloorOther();
-}
-function syncFloorOther() { $('#fFloorOther').hidden = $('#fFloor').value !== OTHER_INSPECTOR; }
-const getFloor = () => $('#fFloor').value === OTHER_INSPECTOR ? $('#fFloorOther').value.trim() : $('#fFloor').value.trim();
-/** รอบการตรวจ: เลือกรอบตามเวลาปัจจุบันให้อัตโนมัติ แต่ผู้ตรวจเปลี่ยนเองได้ (เช่น บันทึกย้อนรอบก่อนหน้า) */
-function renderShiftOptions({ auto = false } = {}) {
-  const sel = $('#fShift'); if (!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = CONFIG.SHIFTS.map(sh => `<option value="${escapeHtml(sh.name)}">รอบ${escapeHtml(sh.name)} (${pad2(sh.from)}:00–${pad2(sh.to)}:00)</option>`).join('');
-  const now = shiftOf();
-  sel.value = (!auto && cur && CONFIG.SHIFTS.some(sh => sh.name === cur)) ? cur : now;
-  $('#fShiftHint').textContent = sel.value === now ? `เลือกอัตโนมัติจากเวลาปัจจุบัน (${fmtHMS(nowMall()).slice(0, 5)} น.)` : `เวลาปัจจุบันอยู่ในรอบ${now} — คุณเลือกบันทึกเป็นรอบ${sel.value}`;
-}
-const getShift = () => $('#fShift').value.trim();
-function renderInspectorOptions() {
-  const sel = $('#fInspector');
-  sel.innerHTML = `<option value="">— เลือกผู้ตรวจ (${nf(CONFIG.INSPECTORS.length)} รายชื่อ) —</option>`
-    + CONFIG.INSPECTORS.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')
-    + `<option value="${OTHER_INSPECTOR}">อื่นๆ (พิมพ์ชื่อเอง)</option>`;
-  // จำผู้ตรวจล่าสุดต่ออุปกรณ์ — ส่วนใหญ่ 1 เครื่อง = 1 ผู้ตรวจ ไม่ต้องเลือกซ้ำทุกครั้ง
-  const saved = store.get('insp_inspector', '');
-  if (saved && CONFIG.INSPECTORS.includes(saved)) sel.value = saved;
-  else if (saved) { sel.value = OTHER_INSPECTOR; $('#fInspectorOther').value = saved; }
-  syncInspectorOther();
-}
-function syncInspectorOther() {
-  const other = $('#fInspector').value === OTHER_INSPECTOR;
-  $('#fInspectorOther').hidden = !other;
-}
-const getInspector = () => $('#fInspector').value === OTHER_INSPECTOR ? $('#fInspectorOther').value.trim() : $('#fInspector').value.trim();
-
-function resetForm() {
-  // เก็บ ผู้ตรวจ/ชั้น/โซน ไว้ — การตรวจต่อเนื่องมักอยู่ชั้นเดียวกัน ลดการกรอกซ้ำ
-  $('#fStore').value = ''; $('#fNote').value = ''; $('#fDetails').value = '';
-  Object.assign(state.form, { image: null, confirmed: false, pendingId: null });
-  renderPhoto(); renderConfirm();
-}
-async function handleClearForm() {
-  const r = await dialog({ icon: 'warning', title: 'ลบข้อมูลในฟอร์ม?', text: 'ข้อมูลที่กรอกและรูปภาพที่แนบไว้จะถูกล้างทั้งหมด', showCancelButton: true, confirmButtonText: 'ล้างข้อมูล', cancelButtonText: 'ยกเลิก', confirmButtonColor: cssVar('--danger') });
-  if (!r.isConfirmed) return;
-  resetForm(); $('#fFloor').value = ''; $('#fFloorOther').value = ''; syncFloorOther(); $('#fZone').value = '';
-  toast('success', 'ล้างข้อมูลในฟอร์มแล้ว');
-}
-
-async function handleSubmit() {
-  if (state.saving) return; // กันกดซ้ำระหว่างกำลังส่ง
-  const f = state.form;
-  const storeName = $('#fStore').value.trim(), inspector = getInspector();
-  const floor = getFloor(), zone = $('#fZone').value.trim(), shift = getShift() || shiftOf();
-  const need = (el, text) => { el.focus(); return dialog({ icon: 'warning', title: 'กรุณากรอกข้อมูลให้ครบถ้วน', text }); };
-  if (!storeName) return need($('#fStore'), 'กรุณาระบุชื่อร้านค้า / สถานที่ตรวจ');
-  if (!shift) return need($('#fShift'), 'กรุณาเลือกรอบการตรวจ');
-  if (!floor) return need($('#fFloor').value === OTHER_INSPECTOR ? $('#fFloorOther') : $('#fFloor'), 'กรุณาเลือกหรือระบุชั้นของจุดตรวจ');
-  if (!inspector) return need($('#fInspector').value === OTHER_INSPECTOR ? $('#fInspectorOther') : $('#fInspector'), 'กรุณาเลือกหรือระบุชื่อผู้ตรวจ');
-  if (f.processing) return toast('info', 'กรุณารอประมวลผลรูปภาพสักครู่');
-  if (!f.image) return dialog({ icon: 'warning', title: 'ยังไม่มีรูปภาพจุดตรวจ', text: 'กรุณาถ่ายภาพหรือเลือกรูปภาพจุดตรวจก่อนบันทึก' });
-
-  const b64 = f.image.dataUrl.split(',')[1] || '';
-  if (b64.length * 0.75 > CONFIG.MAX_UPLOAD_BYTES) {
-    return dialog({ icon: 'error', title: 'ไฟล์รูปภาพใหญ่เกินไป', text: 'กรุณาถ่ายภาพใหม่ หรือเลือกรูปที่มีความละเอียดน้อยลง' });
-  }
-  const tsReal = nowReal(), now = mallDate(tsReal);
-  if (!f.pendingId) f.pendingId = genId(now); // ส่งซ้ำหลังล้มเหลวจะใช้ ID เดิม → ไม่เกิดแถวซ้ำ
-  const record = {
-    ID: f.pendingId, Timestamp: tsReal.toISOString(), InspectionDate: fmtDMY(now), InspectionTime: fmtHMS(now),
-    InspectorName: inspector, Shift: shift, Floor: floor, Zone: zone, StoreName: storeName,
-    Status: f.confirmed ? STATUS_OK : STATUS_PENDING,
-    Note: $('#fNote').value.trim(), Details: $('#fDetails').value.trim(), ImageURL: '', ReportURL: ''
-  };
-
-  // 1) สร้างใบรายงาน แล้ว "แสดงให้ตรวจก่อน" จึงค่อยบันทึกจริง
-  const btn = $('#btnSubmit');
-  setBtnLoading(btn, true, 'กำลังสร้างใบรายงาน…');
-  let reportUrl;
-  try { reportUrl = await buildReportImage(normalizeRecord(record), f.image.dataUrl); }
-  catch (err) { setBtnLoading(btn, false); return dialog({ icon: 'error', title: 'สร้างใบรายงานไม่สำเร็จ', text: err.message }); }
-  setBtnLoading(btn, false);
-  const pre = await dialog({
-    title: 'ตรวจสอบใบรายงานก่อนบันทึก',
-    html: `${reportPreviewHtml(reportUrl)}${f.confirmed ? '' : `<div class="text-sm mt-3" style="color:var(--warn)">ยังไม่ได้กด "ยืนยันจุดตรวจ" — จะบันทึกสถานะเป็น "รอยืนยัน"</div>`}`,
-    width: 'min(94vw, 560px)', showCancelButton: true, confirmButtonText: 'บันทึกและออกใบรายงาน', cancelButtonText: 'กลับไปแก้ไข'
-  });
-  if (!pre.isConfirmed) return;
-
-  // 2) บันทึกข้อมูล + รูปจุดตรวจ + ไฟล์ใบรายงาน (เก็บใน Drive เพื่อเปิดย้อนหลังได้)
-  state.saving = true; setBtnLoading(btn, true, 'กำลังบันทึกข้อมูลและอัปโหลดไฟล์…');
-  let saved = null, queued = false;
-  const payload = {
-    record,
-    image: { base64: b64, mime: 'image/jpeg' },
-    report: { base64: reportUrl.split(',')[1], mime: 'image/jpeg' }
-  };
-  try {
-    if (!navigator.onLine && state.mode !== 'demo') throw new Error('ไม่มีสัญญาณอินเทอร์เน็ต');
-    const res = await API.create(payload);
-    saved = normalizeRecord({ ...record, ImageURL: res.imageUrl || '', ReportURL: res.reportUrl || '' });
-    addLocalRecord(saved); // อัปเดตแดชบอร์ดทันที ไม่ต้องรอโหลดใหม่
-    loadData({ silent: true }); // ซิงก์กับเซิร์ฟเวอร์เบื้องหลัง (ได้ URL จริงจาก Drive)
-  } catch (err) {
-    if (isNetworkError(err)) {
-      // เครือข่ายมีปัญหา → เก็บไว้ในเครื่อง (Outbox) แล้วส่งให้อัตโนมัติเมื่อกลับมาออนไลน์ ผู้ตรวจทำงานต่อได้ทันที
-      try {
-        await Outbox.add(payload); queued = true;
-        saved = Outbox.asRecords().find(r => r.ID === record.ID) || normalizeRecord({ ...record, _pending: true });
-        mergeRecords();
-      } catch (qe) {
-        dialog({ icon: 'error', title: 'บันทึกข้อมูลไม่สำเร็จ', html: `${escapeHtml(err.message)}<br><span class="text-sm" style="color:var(--muted)">และเก็บสำรองในเครื่องไม่ได้ (${escapeHtml(qe.message)}) — ข้อมูลในฟอร์มยังอยู่ครบ กดบันทึกอีกครั้งได้</span>` });
-      }
-    } else {
-      dialog({ icon: 'error', title: 'บันทึกข้อมูลไม่สำเร็จ', html: `${escapeHtml(err.message)}<br><br><span class="text-sm" style="color:var(--muted)">ข้อมูลในฟอร์มยังอยู่ครบ สามารถกดบันทึกอีกครั้งได้ ระบบป้องกันการบันทึกซ้ำให้อัตโนมัติ</span>` });
-    }
-  } finally {
-    state.saving = false; setBtnLoading(btn, false);
-  }
-  if (saved) { store.set('insp_inspector', inspector); resetForm(); renderShiftOptions({ auto: true }); }
-  // เปิดหน้าต่างใบรายงานหลังคืนสถานะปุ่มแล้ว (ปุ่มไม่ค้าง "กำลังบันทึก" ระหว่างดูใบรายงาน)
-  if (saved) await openReportViewer(reportUrl, saved, { justSaved: true, queued });
-}
+function updateClock() { if (Splash.visible) Splash.tick(); }   // นาฬิกาบนหน้าเปิดแอป/หน้าพักจอ
 
 /* =============================================================================
-   8b) LINE REPORT — ใบรายงานรูปภาพ (JPEG 1080px) สำหรับส่งใน LINE
+   8b) REPORT IMAGE — ใบรายงานรูปภาพ (JPEG 1080px) สำหรับบันทึกเป็นไฟล์/ส่งต่อ
    วาดด้วย Canvas 2D โดยตรง (ไม่พึ่ง html2canvas) → ควบคุมตำแหน่ง/ฟอนต์ไทยได้แม่น และไฟล์เล็ก
    ============================================================================= */
 const RPT_FONT = "'IBM Plex Sans Thai','Sarabun',sans-serif";
@@ -1750,37 +1447,23 @@ function downloadDataUrl(url, fileName) {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
-/** แชร์ไฟล์ภาพ (มือถือเลือก LINE ได้โดยตรง) — ถ้าอุปกรณ์/เบราว์เซอร์ไม่รองรับ จะดาวน์โหลดไฟล์แทน */
-async function shareImage(url, fileName, title, text) {
-  const file = new File([dataUrlToBlob(url)], fileName, { type: 'image/jpeg' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title, text }); return true; }
-    catch (e) { if (e && e.name === 'AbortError') return false; }
-  }
-  downloadDataUrl(url, fileName);
-  toast('info', 'ดาวน์โหลดไฟล์แล้ว — เปิด LINE แล้วแนบรูปนี้ได้เลย');
-  return false;
-}
-/** หน้าต่างแสดงรูปใบรายงาน + ปุ่ม ส่ง LINE / บันทึกรูป / ข้อความสรุป / เปิดไฟล์ใน Drive */
-function openImageViewer({ url, title, headHtml = '', fileName, shareTitle, text, driveLink = '', confirmText = 'ปิด', denyText = '' }) {
-  const lineText = `https://line.me/R/share?text=${encodeURIComponent(text)}`;
+/** หน้าต่างแสดงรูปใบรายงาน + ปุ่ม บันทึกรูป / คัดลอกข้อความสรุป / เปิดไฟล์ใน Drive */
+function openImageViewer({ url, title, headHtml = '', fileName, text, driveLink = '', confirmText = 'ปิด', denyText = '' }) {
   return dialog({
     title,
     html: `${headHtml}${reportPreviewHtml(url)}
       <div class="grid grid-cols-2 gap-2 mt-3">
-        <button type="button" class="btn" id="rvShare" style="background:#06c755;color:#fff">${icon('share')}ส่งเข้า LINE</button>
-        <button type="button" class="btn btn-ghost" id="rvDownload">${icon('download')}บันทึกรูปภาพ</button>
-        <a class="btn btn-ghost" href="${lineText}" target="_blank" rel="noopener">${icon('message')}ส่งข้อความสรุป</a>
-        ${driveLink ? `<a class="btn btn-ghost" href="${escapeHtml(driveLink)}" target="_blank" rel="noopener">${icon('external')}เปิดไฟล์ใน Drive</a>` : `<button type="button" class="btn btn-ghost" id="rvCopy">${icon('note')}คัดลอกข้อความ</button>`}
+        <button type="button" class="btn btn-primary" id="rvDownload">${icon('download')}บันทึกรูปภาพ</button>
+        <button type="button" class="btn btn-ghost" id="rvCopy">${icon('note')}คัดลอกข้อความสรุป</button>
+        ${driveLink ? `<a class="btn btn-ghost col-span-2" href="${escapeHtml(driveLink)}" target="_blank" rel="noopener">${icon('external')}เปิดไฟล์ใน Google Drive</a>` : ''}
       </div>
       <div class="text-xs mt-2" style="color:var(--muted)">มือถือ: กดค้างที่รูปเพื่อบันทึกได้ · คอมพิวเตอร์: คลิกขวาที่รูป &gt; บันทึกรูปภาพ</div>`,
     width: 'min(94vw, 560px)', showCloseButton: true,
     confirmButtonText: confirmText, showDenyButton: !!denyText, denyButtonText: denyText,
     didOpen: () => {
       Swal.hideLoading(); // กันสถานะ loading จากหน้าต่างก่อนหน้าค้างอยู่
-      $('#rvShare').addEventListener('click', () => shareImage(url, fileName, shareTitle, text));
-      $('#rvDownload').addEventListener('click', () => { downloadDataUrl(url, fileName); toast('success', 'บันทึกไฟล์รูปภาพแล้ว'); });
-      const cp = $('#rvCopy');
+      const dl = $('#rvDownload'), cp = $('#rvCopy');
+      if (dl) dl.addEventListener('click', () => { try { downloadDataUrl(url, fileName); toast('success', 'บันทึกไฟล์รูปภาพแล้ว'); } catch (e) { toast('error', 'บันทึกไฟล์ไม่สำเร็จ — กดค้างที่รูปเพื่อบันทึกแทนได้'); } });
       if (cp) cp.addEventListener('click', async () => { try { await navigator.clipboard.writeText(text); toast('success', 'คัดลอกข้อความสรุปแล้ว'); } catch (e) { toast('error', 'คัดลอกไม่สำเร็จ'); } });
     }
   });
@@ -1790,14 +1473,14 @@ function openReportViewer(url, rec, { justSaved = false, queued = false } = {}) 
     ? '<b style="color:var(--warn)">ยังไม่มีสัญญาณ — เก็บรายการไว้ในเครื่องแล้ว ระบบจะส่งขึ้น Google Sheets ให้อัตโนมัติเมื่อออนไลน์</b>'
     : 'ไฟล์ใบรายงานถูกเก็บไว้ใน "ประวัติการตรวจย้อนหลัง" แล้ว'}</div>` : '';
   return openImageViewer({
-    url, headHtml: head, fileName: reportFileName(rec), shareTitle: 'ใบรายงานการตรวจร้านค้า', text: reportText(rec),
+    url, headHtml: head, fileName: reportFileName(rec), text: reportText(rec),
     title: justSaved ? (queued ? '📥 เก็บไว้รอส่ง' : '✅ บันทึกข้อมูลสำเร็จ') : 'ใบรายงานการตรวจ',
     driveLink: rec.ReportURL && /^https?:/.test(rec.ReportURL) ? fullImageUrl(rec.ReportURL) : '',
     confirmText: justSaved ? 'บันทึกรายการถัดไป' : 'ปิด', denyText: justSaved ? 'ไปที่แดชบอร์ด' : ''
   }).then(r => { if (justSaved && r.isDenied) showView('dashboard'); return r; });
 }
 
-/** ใบสรุปการตรวจประจำวัน (JPEG 1080px) สำหรับส่ง LINE: KPI + กราฟรายชั่วโมง + รายการตามเวลา */
+/** ใบสรุปการตรวจประจำวัน (JPEG 1080px): KPI + กราฟรายชั่วโมง + รายการตามเวลา */
 async function buildDailyImage(D) {
   await ensureReportFonts();
   const W = 1080, P = 56, IW = W - P * 2, ROW = 92, MAXROWS = 30;
@@ -1886,15 +1569,14 @@ async function openDailyReport() {
   const btn = $('#btnDailyLine'); setBtnLoading(btn, true, 'กำลังสร้างใบสรุป…');
   try {
     const url = await buildDailyImage(D);
-    await openImageViewer({ url, title: 'ใบสรุปการตรวจประจำวัน', fileName: `สรุปการตรวจประจำวัน_${toISODate(D.day)}.jpg`, shareTitle: 'สรุปการตรวจร้านค้าประจำวัน', text: dailyText(D) });
+    await openImageViewer({ url, title: 'ใบสรุปการตรวจประจำวัน', fileName: `สรุปการตรวจประจำวัน_${toISODate(D.day)}.jpg`, text: dailyText(D) });
   } catch (err) { dialog({ icon: 'error', title: 'สร้างใบสรุปไม่สำเร็จ', text: err.message }); }
   finally { setBtnLoading(btn, false); }
 }
 async function copyDailyText() {
   const D = dailyData(); const text = dailyText(D);
-  const r = await dialog({ title: 'ข้อความสรุปประจำวัน', html: `<textarea class="input" rows="10" style="font-size:.85rem" readonly>${escapeHtml(text)}</textarea>`, width: 'min(94vw,560px)', showDenyButton: true, confirmButtonText: 'ส่งเข้า LINE', denyButtonText: 'คัดลอก' });
-  if (r.isConfirmed) window.open(`https://line.me/R/share?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
-  else if (r.isDenied) { try { await navigator.clipboard.writeText(text); toast('success', 'คัดลอกข้อความแล้ว'); } catch (e) { toast('error', 'คัดลอกไม่สำเร็จ'); } }
+  const r = await dialog({ title: 'ข้อความสรุปประจำวัน', html: `<textarea class="input" rows="10" style="font-size:.85rem" readonly>${escapeHtml(text)}</textarea>`, width: 'min(94vw,560px)', showCancelButton: true, confirmButtonText: 'คัดลอกข้อความ', cancelButtonText: 'ปิด' });
+  if (r.isConfirmed) { try { await navigator.clipboard.writeText(text); toast('success', 'คัดลอกข้อความแล้ว'); } catch (e) { toast('error', 'คัดลอกไม่สำเร็จ — เลือกข้อความแล้วคัดลอกเองได้'); } }
 }
 
 /** เปิดใบรายงานย้อนหลังจากประวัติ: ใช้ไฟล์ที่เก็บใน Drive ก่อน ถ้าไม่มี (รายการเก่า) สร้างใหม่จากข้อมูล+รูปจุดตรวจ */
@@ -1963,7 +1645,7 @@ function renderDetail(rec) {
         <span class="check-dot">${icon(rec._ok ? 'check' : 'hourglass')}</span>
         <span><span class="block font-bold">${rec._ok ? 'ยืนยันจุดตรวจแล้ว' : 'รอยืนยันจุดตรวจ'}</span><span class="block text-sm muted">สถานะ: ${escapeHtml(rec.Status || STATUS_PENDING)}</span></span>
       </div>
-      <button type="button" class="btn btn-lg w-full" id="detailReportBig" style="background:#06c755;color:#fff">${icon('file')}ใบรายงาน LINE (ดู / บันทึก / ส่ง)</button>
+      <button type="button" class="btn btn-lg w-full" id="detailReportBig" style="background:#06c755;color:#fff">${icon('file')}ใบรายงานการตรวจ (ดู / บันทึก)</button>
     </div>
     </div>
   </div>`;
@@ -2074,6 +1756,7 @@ async function autoRefresh() {
   } catch (e) { /* ครั้งหน้าลองใหม่ */ }
 }
 function updateStoreDatalist() {
+  if (!$('#storeList')) return;   // หน้าที่ไม่มีฟอร์ม (แอปแดชบอร์ด) ไม่มีรายการช่วยพิมพ์
   const names = [...new Set(state.records.map(r => r.StoreName.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'));
   $('#storeList').innerHTML = names.map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
   // ชั้น/โซน: รวมค่าตั้งต้นใน CONFIG กับค่าที่เคยบันทึกจริง → พิมพ์น้อยลงและสะกดตรงกัน (สรุปผลแยกชั้นได้แม่น)
@@ -2396,7 +2079,7 @@ function filteredRecords() {
   }).sort(byNewest);
 }
 function statusBadge(ok) { return ok ? `<span class="badge badge-ok">${icon('check')}ยืนยันแล้ว</span>` : `<span class="badge badge-warn">${icon('hourglass')}รอยืนยัน</span>`; }
-const reportBtn = (r, compact) => `<button class="btn align-middle" style="padding:.45rem .7rem;background:color-mix(in srgb,#06c755 14%,var(--surface));color:#059669" data-report="${escapeHtml(r.ID)}" title="ดู / บันทึก / ส่งใบรายงาน LINE">${icon('file')}${compact ? '' : `<span>${r.ReportURL ? 'เปิดไฟล์' : 'สร้างไฟล์'}</span>`}</button>`;
+const reportBtn = (r, compact) => `<button class="btn align-middle" style="padding:.45rem .7rem;background:color-mix(in srgb,#06c755 14%,var(--surface));color:#059669" data-report="${escapeHtml(r.ID)}" title="ดู / บันทึกใบรายงาน">${icon('file')}${compact ? '' : `<span>${r.ReportURL ? 'เปิดไฟล์' : 'สร้างไฟล์'}</span>`}</button>`;
 function renderTable() {
   const rows = filteredRecords();
   const pages = Math.max(1, Math.ceil(rows.length / CONFIG.PAGE_SIZE));
@@ -2658,7 +2341,7 @@ async function initBranding() {
   ]);
   if (touch180) setHeadLink('apple-touch-icon', touch180, { sizes: '180x180' });
   if (png192) setHeadLink('icon', png192, { sizes: '192x192', type: 'image/png' });
-  BRAND_PNG = png192; // ใช้วาดโลโก้บนใบรายงาน LINE
+  BRAND_PNG = png192; // ใช้วาดโลโก้บนใบรายงาน
   // Manifest สร้างตอนรันไทม์ (Blob) → กด "ติดตั้งแอป / เพิ่มไปยังหน้าจอหลัก" แล้วได้ชื่อ+ไอคอนของแอปเอง
   // ข้ามเมื่อเปิดผ่าน Apps Script (หน้าเว็บอยู่ใน iframe ของ Google) หรือเปิดจาก file:// ซึ่งติดตั้งไม่ได้อยู่แล้ว
   if (state.mode !== 'gas' && /^https?:$/.test(location.protocol) && png192 && png512) {
@@ -2762,7 +2445,13 @@ function onAppEntered() {
    ============================================================================= */
 function showView(name) {
   state.view = name;
-  ['form', 'detail', 'dashboard'].forEach(v => { const el = $(`#view-${v}`); el.hidden = v !== name; if (v === name) { el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in'); } });
+  // บางแอปไม่มีทุกหน้า (แอปแดชบอร์ดไม่มีหน้าบันทึก) จึงต้องตรวจก่อนทุกครั้ง
+  ['form', 'detail', 'dashboard'].forEach(v => {
+    const el = $(`#view-${v}`); if (!el) return;
+    el.hidden = v !== name;
+    if (v === name) { el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in'); }
+  });
+  if (!$(`#view-${name}`)) { state.view = 'dashboard'; const d = $('#view-dashboard'); if (d) d.hidden = false; }
   const navKey = name === 'detail' ? 'dashboard' : name;
   $$('[data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === navKey));
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
@@ -2808,23 +2497,8 @@ function checkLibraries() {
 function handleEvents() {
   $$('[data-nav]').forEach(b => b.addEventListener('click', () => showView(b.dataset.nav)));
   $('#themeBtn').addEventListener('click', () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
-  // Form
-  $('#formBackBtn').addEventListener('click', () => showView('dashboard'));
-  $('#formClearBtn').addEventListener('click', handleClearForm);
-  $('#btnCamera').addEventListener('click', () => $('#fileCamera').click());
-  $('#btnGallery').addEventListener('click', () => $('#fileGallery').click());
-  $('#fileCamera').addEventListener('change', handleFile);
-  $('#fileGallery').addEventListener('change', handleFile);
-  $('#photoBox').addEventListener('click', () => { if (state.form.processing) return; state.form.image ? openPhotoPreview(state.form.image.dataUrl, $('#fStore').value.trim()) : $('#fileCamera').click(); });
-  $('#photoBox').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#photoBox').click(); } });
-  $('#btnRemovePhoto').addEventListener('click', () => { state.form.image = null; renderPhoto(); });
-  $('#confirmToggle').addEventListener('click', () => { state.form.confirmed = !state.form.confirmed; renderConfirm(); if (navigator.vibrate) navigator.vibrate(15); });
-  $('#fInspector').addEventListener('change', () => { syncInspectorOther(); if ($('#fInspector').value === OTHER_INSPECTOR) $('#fInspectorOther').focus(); });
-  $('#fFloor').addEventListener('change', () => { syncFloorOther(); if ($('#fFloor').value === OTHER_INSPECTOR) $('#fFloorOther').focus(); });
-  $('#fShift').addEventListener('change', () => renderShiftOptions());
-  $('#detailReportBtn').addEventListener('click', () => { if (state.currentDetail) openRecordReport(state.currentDetail); });
-  $('#btnSubmit').addEventListener('click', handleSubmit);
   // Detail
+  $('#detailReportBtn').addEventListener('click', () => { if (state.currentDetail) openRecordReport(state.currentDetail); });
   $('#detailBackBtn').addEventListener('click', () => showView('dashboard'));
   $('#detailDeleteBtn').addEventListener('click', handleDeleteRecord);
   $('#detailPrintBtn').addEventListener('click', printSlip);
@@ -2890,10 +2564,8 @@ function init() {
   renderSyncBadge();
   checkLibraries();
   handleEvents();
-  renderInspectorOptions(); renderFloorOptions(); renderShiftOptions({ auto: true });
   updateClock(); setInterval(updateClock, 1000);
-  renderPhoto(); renderConfirm();
-  showView('form');
+  showView('dashboard');
   setDashTab('overview');
   Outbox.refresh().then(() => { mergeRecords(); Outbox.flush(); }); // มีรายการค้างจากครั้งก่อน → ส่งต่อให้
   loadData({ silent: true });    // โหลดล่วงหน้าเพื่อเติมรายชื่อร้านค้าใน datalist
