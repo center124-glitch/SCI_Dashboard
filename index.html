@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ============================================================================
-   SBK Store Inspect — ระบบบันทึกการตรวจร้านค้า & แดชบอร์ดสรุปผล   SCI_Dashboard_v10.html v10.0 — แอปแดชบอร์ดสรุปผล (บันทึกการตรวจได้ด้วย) · โทนคราม–ม่วง
+   SBK Store Inspect — ระบบบันทึกการตรวจร้านค้า & แดชบอร์ดสรุปผล   SCI_Dashboard_v12.html v12.0 — แอปแดชบอร์ดสรุปผล (บันทึกการตรวจได้ด้วย) · โทนคราม–ม่วง
    v4.0: แดชบอร์ดโฉมใหม่ 3 แท็บ (ภาพรวม / รายงานรายวัน / ประวัติ), รายงานประจำวัน (LINE + A4),
          เชื่อมต่อทนทานขึ้น (retry, fetch→JSONP สำรอง, แคช, Outbox ออฟไลน์, รีเฟรชอัตโนมัติ)
    v3.0: รายชื่อผู้ตรวจ, ชั้น/โซน, ตัด GPS, ฝัง URL Web App, ใบรายงาน LINE (ดูตัวอย่างก่อนบันทึก,
@@ -255,6 +255,30 @@ html[data-theme="dark"] .brand-title{background:linear-gradient(90deg,#5eead4,#7
   #periodLabel{min-width:0;flex:1;font-size:.95rem}
 }
 
+/* ความกว้างของเนื้อหา: จอใหญ่ใช้พื้นที่เต็มกว่าเดิม ~50% (1152px → สูงสุด 1728px)
+   แต่ยังจำกัดไว้ไม่ให้ตารางยืดจนอ่านยากบนจอ ultra-wide */
+.app-container{max-width:1470px;margin-left:auto;margin-right:auto;width:100%}
+@media (min-width:1280px){ .app-container{padding-left:2.5rem;padding-right:2.5rem} }
+@media (min-width:1700px){ .app-container{padding-left:3rem;padding-right:3rem} }
+
+/* แถบเลือกช่วงเวลาในแถบหัว (โทนกระจกให้อ่านง่ายบนพื้นไล่สี) */
+.hero-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-top:1rem;color:#fff}
+.hero-bar .btn-glass{padding:.5rem .9rem}
+.seg-hero{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.28)}
+.seg-hero button{color:rgba(255,255,255,.85)}
+.seg-hero button:hover{color:#fff}
+.seg.seg-hero button.active{background:#fff;color:#1c1c3b;box-shadow:0 6px 14px -6px rgba(0,0,0,.45)}
+html[data-theme="dark"] .seg.seg-hero button.active{background:#f1f5f9;color:#111827}
+.icon-btn-hero{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff}
+.icon-btn-hero:hover{background:rgba(255,255,255,.28);border-color:rgba(255,255,255,.45);color:#fff}
+@media (min-width:1024px){ .hero-bar{margin-top:1.1rem} .hero-bar > div:last-child{margin-left:auto} }
+@media (max-width:640px){
+  .hero-bar{gap:.5rem}
+  #periodSeg{display:grid;grid-template-columns:repeat(4,1fr);width:100%}
+  .hero-bar > div:last-child{width:100%;justify-content:space-between}
+  .hero-bar #periodLabel{min-width:0;flex:1;font-size:.92rem}
+}
+
 /* Toast */
 #toastBox{position:fixed;top:calc(env(safe-area-inset-top,0px) + .8rem);right:.8rem;z-index:3500;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;width:min(92vw,380px)}
 @media (max-width:640px){#toastBox{left:50%;right:auto;transform:translateX(-50%)}}
@@ -396,7 +420,7 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
 
 <!-- ═══════════════════════ APP BAR ═══════════════════════ -->
 <header class="appbar">
-  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
+  <div class="app-container px-4 h-16 flex items-center gap-3">
     <img class="brand-logo app-logo" id="brandLogo" src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%230d9488%22/%3E%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%230891b2%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%236366f1%22/%3E%3C/linearGradient%3E%3ClinearGradient%20id%3D%22gold%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fde68a%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23f59e0b%22/%3E%3C/linearGradient%3E%3CradialGradient%20id%3D%22shine%22%20cx%3D%22.25%22%20cy%3D%22.15%22%20r%3D%22.85%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%22.38%22/%3E%3Cstop%20offset%3D%22.6%22%20stop-color%3D%22%23fff%22%20stop-opacity%3D%220%22/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22116%22%20fill%3D%22url%28%23bg%29%22/%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22116%22%20fill%3D%22url%28%23shine%29%22/%3E%3Cg%3E%3Crect%20x%3D%22108%22%20y%3D%22370%22%20width%3D%22296%22%20height%3D%2216%22%20rx%3D%228%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.85%22/%3E%3Crect%20x%3D%22140%22%20y%3D%22180%22%20width%3D%22232%22%20height%3D%22194%22%20rx%3D%2216%22%20fill%3D%22%23fff%22%20fill-opacity%3D%22.96%22/%3E%3Crect%20x%3D%22172%22%20y%3D%22262%22%20width%3D%2266%22%20height%3D%22112%22%20rx%3D%2210%22%20fill%3D%22url%28%23bg%29%22/%3E%3Ccircle%20cx%3D%22224%22%20cy%3D%22320%22%20r%3D%226%22%20fill%3D%22%23fff%22/%3E%3Crect%20x%3D%22262%22%20y%3D%22222%22%20width%3D%2284%22%20height%3D%2262%22%20rx%3D%2210%22%20fill%3D%22url%28%23bg%29%22%20fill-opacity%3D%22.9%22/%3E%3Cpath%20d%3D%22M120%20148%20156%2098h200l36%2050z%22%20fill%3D%22%23fff%22/%3E%3Cpath%20d%3D%22M188%2098h34l-10%2050h-44zM290%2098h34l24%2050h-44z%22%20fill%3D%22url%28%23gold%29%22%20fill-opacity%3D%22.9%22/%3E%3Cpath%20d%3D%22M120%20148h68v18a34%2034%200%200%201-68%200z%22%20fill%3D%22%23fff%22/%3E%3Cpath%20d%3D%22M188%20148h68v18a34%2034%200%200%201-68%200z%22%20fill%3D%22url%28%23gold%29%22/%3E%3Cpath%20d%3D%22M256%20148h68v18a34%2034%200%200%201-68%200z%22%20fill%3D%22%23fff%22/%3E%3Cpath%20d%3D%22M324%20148h68v18a34%2034%200%200%201-68%200z%22%20fill%3D%22url%28%23gold%29%22/%3E%3Ccircle%20cx%3D%22362%22%20cy%3D%22366%22%20r%3D%2276%22%20fill%3D%22url%28%23gold%29%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2214%22/%3E%3Cpath%20d%3D%22m326%20366%2024%2024%2050-54%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/g%3E%3C/svg%3E" alt="โลโก้" title="แสดงหน้าโลโก้">
     <div class="min-w-0 flex-1 md:flex-none">
       <div class="font-bold leading-tight truncate"><span class="brand-title">Store Checkpoint Inspection</span> <span class="hidden sm:inline muted font-medium text-sm">· แดชบอร์ดสรุปผล</span></div>
@@ -410,7 +434,108 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
   </div>
 </header>
 
-<main class="max-w-6xl mx-auto px-4 pt-5 pb-28 md:pb-12">
+<main class="app-container px-4 pt-5 pb-28 md:pb-12">
+
+  <!-- ═══════════════════════ VIEW: FORM (บันทึกการตรวจ) ═══════════════════════ -->
+  <section id="view-form" class="fade-in">
+    <div class="page-head">
+      <button class="icon-btn" id="formBackBtn" title="ย้อนกลับ" aria-label="ย้อนกลับ" data-icon="arrow-left"></button>
+      <div class="flex-1 min-w-0">
+        <h1>รายละเอียดจุดตรวจ</h1>
+        <div class="text-xs muted">บันทึกการตรวจร้านค้าใหม่</div>
+      </div>
+      <button class="icon-btn danger" id="formClearBtn" title="ลบข้อมูลในฟอร์ม" aria-label="ลบข้อมูลในฟอร์ม" data-icon="trash"></button>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-5">
+      <!-- คอลัมน์ซ้าย: ร้านค้า + รูปภาพ -->
+      <div class="space-y-5">
+        <div class="card card-accent p-5 space-y-4">
+          <div>
+            <label class="label mb-1.5" for="fStore"><span data-icon="store"></span>ชื่อร้านค้า / สถานที่ตรวจ <span style="color:var(--danger)">*</span></label>
+            <input id="fStore" class="input input-hero" list="storeList" maxlength="200" autocomplete="off" placeholder="ระบุชื่อร้านค้าหรือสถานที่">
+            <datalist id="storeList"></datalist>
+          </div>
+          <div>
+            <label class="label mb-1.5" for="fShift"><span data-icon="clock"></span>รอบการตรวจ <span style="color:var(--danger)">*</span></label>
+            <select id="fShift" class="input"></select>
+            <div class="text-xs muted mt-1" id="fShiftHint"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label mb-1.5" for="fFloor"><span data-icon="layers"></span>ชั้น <span style="color:var(--danger)">*</span></label>
+              <select id="fFloor" class="input"></select>
+              <input id="fFloorOther" class="input mt-2" maxlength="50" autocomplete="off" placeholder="ระบุชั้นเอง" hidden>
+            </div>
+            <div>
+              <label class="label mb-1.5" for="fZone"><span data-icon="grid"></span>โซน</label>
+              <input id="fZone" class="input" list="zoneList" maxlength="80" autocomplete="off" placeholder="เช่น A, ฝั่งทิศเหนือ">
+              <datalist id="zoneList"></datalist>
+            </div>
+          </div>
+          <div>
+            <label class="label mb-1.5" for="fInspector"><span data-icon="user"></span>ผู้ตรวจ <span style="color:var(--danger)">*</span></label>
+            <select id="fInspector" class="input"></select>
+            <input id="fInspectorOther" class="input mt-2" maxlength="120" autocomplete="name" placeholder="พิมพ์ชื่อ-นามสกุล ผู้ตรวจ" hidden>
+          </div>
+        </div>
+
+        <div class="card p-4">
+          <div class="flex items-center justify-between mb-3 px-1">
+            <span class="label"><span data-icon="image"></span>รูปภาพจุดตรวจ <span style="color:var(--danger)">*</span></span>
+            <span id="photoMeta" class="text-xs muted"></span>
+          </div>
+          <div id="photoBox" class="photo-box" role="button" tabindex="0" aria-label="ถ่ายภาพจุดตรวจ"></div>
+          <div class="grid grid-cols-2 gap-2 mt-3" id="photoActions">
+            <button class="btn btn-soft" id="btnCamera"><span data-icon="camera"></span>ถ่ายภาพจากกล้อง</button>
+            <button class="btn btn-ghost" id="btnGallery"><span data-icon="image"></span>เลือกรูปภาพ</button>
+          </div>
+          <button class="btn btn-danger w-full mt-2" id="btnRemovePhoto" hidden><span data-icon="x"></span>ลบรูปภาพนี้</button>
+          <!-- capture="environment" = เปิดกล้องหลังบนมือถือทันที; อีกช่องไม่ใส่ capture เพื่อให้เลือกจากคลังภาพได้ -->
+          <input type="file" id="fileCamera" accept="image/*" capture="environment" hidden>
+          <input type="file" id="fileGallery" accept="image/*" hidden>
+        </div>
+      </div>
+
+      <!-- คอลัมน์ขวา: เวลา / รายละเอียด / ยืนยัน / บันทึก -->
+      <div class="space-y-5">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="tile tile-sky">
+            <div class="label"><span data-icon="calendar"></span>วันที่บันทึก</div>
+            <div class="tile-value" id="fDate">--/--/----</div>
+            <div class="text-xs muted truncate" id="fDateLong">&nbsp;</div>
+          </div>
+          <div class="tile tile-violet">
+            <div class="label"><span data-icon="clock"></span>เวลาที่บันทึก</div>
+            <div class="tile-value" id="fTime">--:--:--</div>
+            <div class="text-xs muted truncate">ใช้เวลาปัจจุบันอัตโนมัติ</div>
+          </div>
+        </div>
+
+        <div class="card p-5 space-y-4">
+          <div>
+            <label class="label mb-1.5" for="fNote"><span data-icon="note"></span>หมายเหตุ</label>
+            <input id="fNote" class="input" maxlength="1000" placeholder="เช่น ปกติ / พบข้อบกพร่อง">
+          </div>
+          <div>
+            <label class="label mb-1.5" for="fDetails"><span data-icon="note"></span>รายละเอียดเพิ่มเติม</label>
+            <textarea id="fDetails" class="input" rows="4" maxlength="5000" placeholder="บรรยายรายละเอียดสิ่งที่ตรวจพบ การแก้ไข หรือข้อเสนอแนะ"></textarea>
+          </div>
+        </div>
+
+        <button class="confirm-card interactive" id="confirmToggle" role="switch" aria-checked="false">
+          <span class="check-dot" data-icon="check"></span>
+          <span class="flex-1 min-w-0">
+            <span class="block font-bold" id="confirmTitle">ยังไม่ยืนยันจุดตรวจ</span>
+            <span class="block text-sm muted" id="confirmSub">แตะเพื่อยืนยันว่าได้ตรวจจุดนี้เรียบร้อยแล้ว</span>
+          </span>
+        </button>
+
+        <button class="btn btn-primary btn-lg w-full" id="btnSubmit"><span data-icon="file"></span>ตรวจสอบและบันทึกการตรวจ</button>
+        <div class="text-xs muted text-center -mt-2">ระบบจะประทับวัน–เวลาลงบนภาพ และแสดงตัวอย่างใบรายงานให้ตรวจสอบก่อนบันทึกจริง</div>
+      </div>
+    </div>
+  </section>
 
   <!-- ═══════════════════════ VIEW: DETAIL (ดูรายการที่บันทึกแล้ว) ═══════════════════════ -->
   <section id="view-detail" hidden>
@@ -443,9 +568,24 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
           <button class="btn btn-white" id="btnPrintReport"><span data-icon="printer"></span><span id="printLabel">พิมพ์รายงาน</span></button>
         </div>
       </div>
+      <!-- แถบเลือกช่วงเวลาอยู่ในแถบหัว แถวเดียวกับแท็บ — ลดความสูงของหน้าและหาง่ายขึ้น -->
+      <div class="hero-bar" id="periodBar">
+        <div class="seg seg-hero overflow-x-auto max-w-full" id="periodSeg">
+          <button data-period="day">รายวัน</button>
+          <button data-period="week">รายสัปดาห์</button>
+          <button data-period="month">รายเดือน</button>
+          <button data-period="year">รายปี</button>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button class="icon-btn icon-btn-hero" id="periodPrev" aria-label="ช่วงก่อนหน้า" data-icon="chev-left"></button>
+          <div class="text-center font-bold min-w-[10rem] px-1 leading-snug" id="periodLabel">—</div>
+          <button class="icon-btn icon-btn-hero" id="periodNext" aria-label="ช่วงถัดไป" data-icon="chev-right"></button>
+          <button class="btn btn-glass" id="periodNow">ปัจจุบัน</button>
+        </div>
+      </div>
       <div class="dash-tabs" role="tablist">
         <button role="tab" data-tab="overview" class="active"><span data-icon="chart"></span>ภาพรวม</button>
-        <button role="tab" data-tab="daily"><span data-icon="calendar"></span>รายงานรายวัน</button>
+        <button role="tab" data-tab="daily"><span data-icon="calendar"></span>รายงานสรุป</button>
         <button role="tab" data-tab="history"><span data-icon="clipboard"></span>ประวัติการตรวจ</button>
       </div>
     </div>
@@ -464,21 +604,6 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
 
     <div id="dashContent" hidden>
       <!-- แถบเลือกช่วงเวลา (ใช้กับ ภาพรวม + ประวัติ) -->
-      <div class="card p-3 sm:p-4 mb-5 flex flex-col sm:flex-row sm:items-center gap-3" id="periodBar">
-        <div class="seg self-start overflow-x-auto max-w-full" id="periodSeg">
-          <button data-period="day">รายวัน</button>
-          <button data-period="week">รายสัปดาห์</button>
-          <button data-period="month">รายเดือน</button>
-          <button data-period="year">รายปี</button>
-        </div>
-        <div class="flex items-center gap-2 sm:ml-auto">
-          <button class="icon-btn" id="periodPrev" aria-label="ช่วงก่อนหน้า" data-icon="chev-left"></button>
-          <div class="text-center font-bold min-w-[11rem] px-1 leading-snug" id="periodLabel">—</div>
-          <button class="icon-btn" id="periodNext" aria-label="ช่วงถัดไป" data-icon="chev-right"></button>
-          <button class="btn btn-soft" id="periodNow">ปัจจุบัน</button>
-        </div>
-      </div>
-
       <!-- ── แท็บ: ภาพรวม ── -->
       <div data-pane="overview">
         <div id="kpiGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5"></div>
@@ -517,15 +642,23 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
       <!-- ── แท็บ: รายงานรายวัน ── -->
       <div data-pane="daily" hidden>
         <div class="card p-3 sm:p-4 mb-5 flex flex-col lg:flex-row lg:items-center gap-3">
+          <div class="seg self-start" id="repSeg">
+            <button data-rep="day">รายวัน</button>
+            <button data-rep="week">รายสัปดาห์</button>
+            <button data-rep="month">รายเดือน</button>
+            <button data-rep="year">รายปี</button>
+          </div>
           <div class="flex items-center gap-2">
-            <button class="icon-btn" id="dayPrev" aria-label="วันก่อนหน้า" data-icon="chev-left"></button>
-            <input type="date" id="dayPicker" class="input" style="width:auto;padding:.5rem .8rem">
-            <button class="icon-btn" id="dayNext" aria-label="วันถัดไป" data-icon="chev-right"></button>
-            <button class="btn btn-soft" id="dayToday">วันนี้</button>
+            <button class="icon-btn" id="dayPrev" aria-label="ช่วงก่อนหน้า" data-icon="chev-left"></button>
+            <input type="date" id="repDate" class="input" style="width:auto;padding:.5rem .8rem">
+            <input type="month" id="repMonth" class="input" style="width:auto;padding:.5rem .8rem" hidden>
+            <select id="repYear" class="input" style="width:auto;padding:.5rem .8rem" hidden></select>
+            <button class="icon-btn" id="dayNext" aria-label="ช่วงถัดไป" data-icon="chev-right"></button>
+            <button class="btn btn-soft" id="dayToday">ปัจจุบัน</button>
           </div>
           <div class="font-bold lg:ml-2" id="dayLabel">—</div>
           <div class="flex flex-wrap gap-2 lg:ml-auto">
-            <button class="btn" id="btnDailyLine" style="background:#06c755;color:#fff"><span data-icon="file"></span>ใบสรุปประจำวัน (รูปภาพ)</button>
+            <button class="btn btn-primary" id="btnDailyLine"><span data-icon="file"></span><span id="btnDailyLineLabel">ใบสรุปประจำวัน (รูปภาพ)</span></button>
             <button class="btn btn-ghost" id="btnDailyText"><span data-icon="message"></span>ข้อความสรุป</button>
             <button class="btn btn-ghost" id="btnDailyPrint"><span data-icon="printer"></span>พิมพ์ A4</button>
           </div>
@@ -533,23 +666,24 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
         <div id="dailyStats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5"></div>
         <div id="dailyEmpty" class="card p-10 text-center muted mb-5" hidden>
           <div class="mx-auto w-14 h-14 rounded-2xl grid place-items-center mb-3" style="background:var(--primary-soft);color:var(--primary)" data-icon="calendar"></div>
-          <div class="font-bold" style="color:var(--text)">ไม่มีการตรวจในวันนี้</div>
-          <div class="text-sm">เลือกวันอื่นจากปฏิทินด้านบน หรือกด "บันทึกการตรวจ" เพื่อเริ่มรายการแรก</div>
+          <div class="font-bold" style="color:var(--text)">ไม่มีการตรวจในช่วงที่เลือก</div>
+          <div class="text-sm">เลือกช่วงเวลาอื่นจากแถบด้านบน</div>
         </div>
         <div id="dailyBody">
           <div class="grid lg:grid-cols-3 gap-4 mb-4">
             <div class="card p-4 lg:col-span-2">
-              <div class="card-head"><div><div class="card-title">จำนวนการตรวจรายชั่วโมง</div><div class="card-sub">ช่วงเวลาที่มีการตรวจ</div></div></div>
+              <div class="card-head"><div><div class="card-title" id="repChartTitle">จำนวนการตรวจรายชั่วโมง</div><div class="card-sub" id="repChartSub">ช่วงเวลาที่มีการตรวจ</div></div></div>
               <div class="chart-box h-64"><canvas id="chartHourly"></canvas></div>
             </div>
             <div class="card p-4">
-              <div class="card-head"><div><div class="card-title">แยกตามชั้น / ผู้ตรวจ</div><div class="card-sub">ของวันที่เลือก</div></div></div>
+              <div class="card-head"><div><div class="card-title">แยกตามรอบ / ชั้น / ผู้ตรวจ</div><div class="card-sub" id="repBreakSub">ของช่วงที่เลือก</div></div></div>
               <div id="dailyBreakdown" class="rank-list"></div>
             </div>
           </div>
           <div class="card p-4">
-            <div class="card-head"><div><div class="card-title">ลำดับการตรวจของวัน</div><div class="card-sub" id="dailyCount">—</div></div></div>
+            <div class="card-head"><div><div class="card-title" id="repListTitle">ลำดับการตรวจของวัน</div><div class="card-sub" id="dailyCount">—</div></div></div>
             <div id="dailyTimeline" class="timeline"></div>
+            <div id="repRankList" class="rank-list" hidden></div>
           </div>
         </div>
       </div>
@@ -600,7 +734,10 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
   </section>
 </main>
 
-<!-- แอปแดชบอร์ดมีหน้าเดียว จึงไม่ต้องมีแถบเมนูล่าง -->
+<!-- Mobile bottom navigation -->
+<nav class="bottom-nav md:hidden" style="grid-template-columns:1fr">
+  <button data-nav="dashboard"><span data-icon="chart"></span>แดชบอร์ด</button>
+</nav>
 
 <div id="libError" hidden></div>
 <div id="printChartHolder"></div>
@@ -640,6 +777,7 @@ const CONFIG = {
   IMAGE_QUALITY: 0.75,
   APP_NAME: 'Store Checkpoint Inspection Form',
   APP_ROLE: 'dashboard',        // ไฟล์นี้คือแอปแดชบอร์ด — บันทึกการตรวจได้ด้วยในแท็บ "บันทึกการตรวจ"
+  ALLOW_GALLERY: true,          // true = เลือกรูปจากเครื่องได้ด้วย · false = ถ่ายจากกล้องเท่านั้น (ใช้กับแอปฟอร์มหน้างาน)
   APP_SHORT_NAME: 'Checkpoint Form',
   SPLASH_MS: 3000,              // หน้าโลโก้ตอนเปิดแอป แล้วเข้าสู่ระบบอัตโนมัติ (กำหนดได้ 2000–4000 ms)
   IDLE_MS: 4 * 60 * 1000,       // ไม่มีการใช้งานกี่ ms จึงแสดงหน้าพักจอ (กำหนดได้ 3–5 นาที)
@@ -692,6 +830,7 @@ const state = {
   clockWarned: false,
   truncated: 0,
   dailyDate: nowMall(),
+  repType: 'day',            // ชนิดรายงานในแท็บ "รายงานสรุป": day | month | year
   loading: false,
   lastUpdated: null,
   view: 'form',
@@ -1214,7 +1353,9 @@ async function showConnectionInfo() {
       ${ERRORS.length ? `<div class="text-xs" style="color:var(--muted)"><b>บันทึกข้อผิดพลาด (${nf(ERRORS.length)}):</b> ${escapeHtml(ERRORS.slice(-2).map(e => `${fmtHMS(e.at)} ${e.label}: ${e.message}`).join(' · '))}</div>` : ''}
       </div>`,
     showCancelButton: true, showDenyButton: !!Outbox.items.length, denyButtonText: 'ส่งรายการค้างใหม่ทั้งหมด',
-    confirmButtonText: 'ทดสอบการเชื่อมต่อ', cancelButtonText: 'ปิด'
+    confirmButtonText: 'ทดสอบการเชื่อมต่อ', cancelButtonText: 'ปิด',
+    footer: CONFIG.APP_ROLE === 'dashboard' ? '<a href="#form" id="lnkOpenForm">เปิดหน้าบันทึกการตรวจ (ซ่อนเมนูไว้)</a>' : undefined,
+    didOpen: () => { const a = $('#lnkOpenForm'); if (a) a.addEventListener('click', () => { Swal.close(); showView('form'); }); }
   });
   if (r.isDenied) return Outbox.retryAll();
   if (!r.isConfirmed) return;
@@ -1259,9 +1400,278 @@ function setBtnLoading(btn, loading, loadingText) {
 }
 
 /* =============================================================================
-   8) (แอปแดชบอร์ดไม่มีหน้าบันทึกการตรวจ — ใช้แอปฟอร์ม SCI_Form_v10.html สำหรับบันทึก)
+   8) FORM — บันทึกการตรวจ
    ============================================================================= */
-function updateClock() { if (Splash.visible) Splash.tick(); }   // นาฬิกาบนหน้าเปิดแอป/หน้าพักจอ
+function updateClock() {
+  const now = nowMall();
+  $('#fDate').textContent = fmtDMY(now);
+  $('#fDateLong').textContent = fmtThaiLong(now, true);
+  $('#fTime').textContent = fmtHMS(now);
+  if (Splash.visible) Splash.tick(now);
+}
+
+/** โหมดกล้องอย่างเดียว: ซ่อนปุ่มเลือกรูป + ตัดช่องเลือกไฟล์ออกจาก DOM เพื่อไม่ให้เรียกใช้ได้เลย */
+function applyPhotoMode() {
+  const gal = $('#btnGallery'), input = $('#fileGallery');
+  if (CONFIG.ALLOW_GALLERY) return;
+  if (gal) gal.remove();
+  if (input) input.remove();
+  const box = $('#photoActions'); if (box) box.classList.replace('grid-cols-2', 'grid-cols-1');
+  const hint = $('#photoHint'); if (hint) hint.textContent = 'ต้องถ่ายจากกล้อง ณ จุดตรวจเท่านั้น (ระบบประทับวัน–เวลาลงบนภาพให้อัตโนมัติ)';
+}
+function renderPhoto() {
+  const box = $('#photoBox'); const img = state.form.image;
+  box.classList.toggle('has-img', !!img);
+  let html = img
+    ? `<img src="${img.dataUrl}" alt="รูปภาพจุดตรวจ">`
+    : `<div class="text-center px-6 muted"><div class="mx-auto mb-2 w-14 h-14 rounded-2xl grid place-items-center" style="background:var(--grad-brand);color:#fff;box-shadow:0 10px 22px -10px rgba(8,145,178,.8)">${icon('camera', 'w-7 h-7')}</div><div class="font-semibold" style="color:var(--text)">แตะเพื่อถ่ายภาพจุดตรวจ</div><div class="text-xs mt-0.5" id="photoHint">${CONFIG.ALLOW_GALLERY ? 'รองรับ JPG / PNG / WEBP · ระบบย่อขนาดให้อัตโนมัติ' : 'ต้องถ่ายจากกล้อง ณ จุดตรวจเท่านั้น (ระบบประทับวัน–เวลาให้อัตโนมัติ)'}</div></div>`;
+  if (state.form.processing) html += `<div class="photo-overlay"><div class="flex items-center gap-2 font-semibold" style="color:var(--primary)"><span class="spinner"></span>กำลังประมวลผลรูปภาพ…</div></div>`;
+  box.innerHTML = html;
+  $('#photoMeta').textContent = img ? `${img.w}×${img.h}px · ${(img.bytes / 1024).toFixed(0)} KB` : '';
+  $('#btnRemovePhoto').hidden = !img;
+}
+
+/** ย่อ + บีบอัดรูปด้วย canvas → JPEG ก่อนส่ง
+    เหตุผล: รูปกล้องมือถือ 3–8MB ทำให้อัปโหลดช้าและเกิน payload ของ Apps Script
+    เบราว์เซอร์รุ่นใหม่หมุนรูปตาม EXIF ให้แล้วตอน drawImage จึงไม่ต้องอ่าน EXIF เอง */
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, CONFIG.IMAGE_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale)), h = Math.max(1, Math.round(img.naturalHeight * scale));
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); // PNG โปร่งใส → พื้นขาว ไม่กลายเป็นดำเมื่อแปลง JPEG
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = c.toDataURL('image/jpeg', CONFIG.IMAGE_QUALITY);
+        resolve({ dataUrl, w, h, bytes: Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 3 / 4) });
+      } catch (e) { reject(new Error('ประมวลผลรูปภาพไม่สำเร็จ กรุณาเลือกรูปอื่น')); }
+      finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('ไม่สามารถอ่านไฟล์รูปภาพนี้ได้ (รองรับ JPG, PNG, WEBP) — หากเป็นไฟล์ HEIC กรุณาถ่ายผ่านปุ่ม "ถ่ายภาพ" แทน')); };
+    img.src = url;
+  });
+}
+/**
+ * ประทับข้อมูลลงบนภาพถ่าย (วัน–เวลา + ร้าน/ชั้น/โซน/รอบ/ผู้ตรวจ) เหมือนกล้อง CCTV
+ * ทำตอน "กดบันทึก" ไม่ใช่ตอนแนบรูป เพราะข้อมูลร้าน/ชั้น/รอบ อาจถูกกรอกหลังแนบรูป
+ * ถ้าประทับไม่สำเร็จ (เช่นหน่วยความจำไม่พอ) จะคืนรูปเดิมเพื่อให้ยังบันทึกงานได้
+ */
+async function stampPhoto(dataUrl, info) {
+  try {
+    const img = await loadImg(dataUrl);
+    const W = img.naturalWidth, H = img.naturalHeight;
+    if (!W || !H) return dataUrl;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, W, H);
+    const S = W / 1280;                                  // สเกลตามความกว้างจริงของภาพ
+    const pad = Math.round(24 * S);
+    const fBig = Math.max(18, Math.round(46 * S)), fSmall = Math.max(13, Math.round(30 * S));
+    const line2 = [info.store, floorZone(info), info.shift ? `รอบ${info.shift}` : '', info.inspector].filter(Boolean).join('  ·  ');
+    ctx.font = `700 ${fBig}px ${RPT_FONT}`;
+    const w1 = ctx.measureText(info.stamp).width;
+    ctx.font = `500 ${fSmall}px ${RPT_FONT}`;
+    const w2 = ctx.measureText(line2).width;
+    const boxW = Math.min(W - pad * 2, Math.max(w1, w2) + pad * 2);
+    const boxH = fBig + fSmall + pad * 1.9;
+    const bx = pad, by = H - boxH - pad;
+    // แถบพื้นหลังโปร่งแสงให้ตัวอักษรอ่านออกทุกสภาพแสง
+    ctx.save();
+    const g = ctx.createLinearGradient(bx, by, bx, by + boxH);
+    g.addColorStop(0, 'rgba(8,20,20,.62)'); g.addColorStop(1, 'rgba(8,20,20,.78)');
+    rrect(ctx, bx, by, boxW, boxH, Math.round(18 * S)); ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = Math.max(1, S); ctx.stroke();
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#ffffff'; ctx.font = `700 ${fBig}px ${RPT_FONT}`;
+    ctx.fillText(info.stamp, bx + pad, by + pad * 0.7, boxW - pad * 2);
+    ctx.fillStyle = '#d7f5ea'; ctx.font = `500 ${fSmall}px ${RPT_FONT}`;
+    ctx.fillText(line2, bx + pad, by + pad * 0.7 + fBig * 1.15, boxW - pad * 2);
+    ctx.restore();
+    return c.toDataURL('image/jpeg', CONFIG.IMAGE_QUALITY);
+  } catch (err) {
+    ERRORS.push({ at: nowMall(), label: 'stampPhoto', message: String(err && err.message || err) });
+    return dataUrl;   // ประทับไม่ได้ก็ยังบันทึกรูปเดิมได้ ไม่ขวางการทำงานหน้างาน
+  }
+}
+
+async function handleFile(e) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = ''; // reset เพื่อให้เลือกไฟล์เดิมซ้ำได้ (change event จะยิงอีกครั้ง)
+  if (!file) return;
+  if (!/^image\//.test(file.type) && !/\.(jpe?g|png|webp|heic|heif)$/i.test(file.name)) { toast('error', 'กรุณาเลือกไฟล์รูปภาพเท่านั้น'); return; }
+  state.form.processing = true; renderPhoto();
+  try {
+    state.form.image = await compressImage(file);
+    toast('success', 'แนบรูปภาพเรียบร้อย');
+  } catch (err) {
+    dialog({ icon: 'error', title: 'แนบรูปภาพไม่สำเร็จ', text: err.message });
+  } finally {
+    state.form.processing = false; renderPhoto();
+  }
+}
+function renderConfirm() {
+  const on = state.form.confirmed; const el = $('#confirmToggle');
+  el.classList.toggle('on', on); el.setAttribute('aria-checked', String(on));
+  $('#confirmTitle').textContent = on ? 'ยืนยันจุดตรวจแล้ว' : 'ยังไม่ยืนยันจุดตรวจ';
+  $('#confirmSub').textContent = on ? 'สถานะจะถูกบันทึกเป็น "ยืนยันแล้ว"' : 'แตะเพื่อยืนยันว่าได้ตรวจจุดนี้เรียบร้อยแล้ว';
+}
+
+/* ---------- ผู้ตรวจ / ชั้น / โซน ---------- */
+const OTHER_INSPECTOR = '__other__';
+/** ชั้น: ใช้ตัวเลือกมาตรฐาน + ชั้นที่เคยบันทึกจริงในชีต (เผื่อมีชั้นพิเศษ) + ระบุเอง */
+function renderFloorOptions() {
+  const sel = $('#fFloor'); if (!sel) return;
+  const cur = sel.value, other = $('#fFloorOther').value.trim();
+  const fromData = state.records.map(r => String(r.Floor || '').trim()).filter(Boolean);
+  const list = [...new Set(CONFIG.FLOORS.map(String).concat(fromData))];
+  sel.innerHTML = '<option value="">— เลือกชั้น —</option>'
+    + list.map(n => `<option value="${escapeHtml(n)}">ชั้น ${escapeHtml(n)}</option>`).join('')
+    + `<option value="${OTHER_INSPECTOR}">อื่นๆ (ระบุเอง)</option>`;
+  // รักษาค่าที่ผู้ใช้เลือกไว้ตอน re-render (เช่นเมื่อโหลดข้อมูลเสร็จแล้วรายการชั้นเพิ่มขึ้น)
+  if (cur && [...sel.options].some(o => o.value === cur)) sel.value = cur;
+  else if (other) sel.value = OTHER_INSPECTOR;
+  syncFloorOther();
+}
+function syncFloorOther() { $('#fFloorOther').hidden = $('#fFloor').value !== OTHER_INSPECTOR; }
+const getFloor = () => $('#fFloor').value === OTHER_INSPECTOR ? $('#fFloorOther').value.trim() : $('#fFloor').value.trim();
+/** รอบการตรวจ: เลือกรอบตามเวลาปัจจุบันให้อัตโนมัติ แต่ผู้ตรวจเปลี่ยนเองได้ (เช่น บันทึกย้อนรอบก่อนหน้า) */
+function renderShiftOptions({ auto = false } = {}) {
+  const sel = $('#fShift'); if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = CONFIG.SHIFTS.map(sh => `<option value="${escapeHtml(sh.name)}">รอบ${escapeHtml(sh.name)} (${pad2(sh.from)}:00–${pad2(sh.to)}:00)</option>`).join('');
+  const now = shiftOf();
+  sel.value = (!auto && cur && CONFIG.SHIFTS.some(sh => sh.name === cur)) ? cur : now;
+  $('#fShiftHint').textContent = sel.value === now ? `เลือกอัตโนมัติจากเวลาปัจจุบัน (${fmtHMS(nowMall()).slice(0, 5)} น.)` : `เวลาปัจจุบันอยู่ในรอบ${now} — คุณเลือกบันทึกเป็นรอบ${sel.value}`;
+}
+const getShift = () => $('#fShift').value.trim();
+function renderInspectorOptions() {
+  const sel = $('#fInspector');
+  sel.innerHTML = `<option value="">— เลือกผู้ตรวจ (${nf(CONFIG.INSPECTORS.length)} รายชื่อ) —</option>`
+    + CONFIG.INSPECTORS.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')
+    + `<option value="${OTHER_INSPECTOR}">อื่นๆ (พิมพ์ชื่อเอง)</option>`;
+  // จำผู้ตรวจล่าสุดต่ออุปกรณ์ — ส่วนใหญ่ 1 เครื่อง = 1 ผู้ตรวจ ไม่ต้องเลือกซ้ำทุกครั้ง
+  const saved = store.get('insp_inspector', '');
+  if (saved && CONFIG.INSPECTORS.includes(saved)) sel.value = saved;
+  else if (saved) { sel.value = OTHER_INSPECTOR; $('#fInspectorOther').value = saved; }
+  syncInspectorOther();
+}
+function syncInspectorOther() {
+  const other = $('#fInspector').value === OTHER_INSPECTOR;
+  $('#fInspectorOther').hidden = !other;
+}
+const getInspector = () => $('#fInspector').value === OTHER_INSPECTOR ? $('#fInspectorOther').value.trim() : $('#fInspector').value.trim();
+
+function resetForm() {
+  // เก็บ ผู้ตรวจ/ชั้น/โซน ไว้ — การตรวจต่อเนื่องมักอยู่ชั้นเดียวกัน ลดการกรอกซ้ำ
+  $('#fStore').value = ''; $('#fNote').value = ''; $('#fDetails').value = '';
+  Object.assign(state.form, { image: null, confirmed: false, pendingId: null });
+  renderPhoto(); renderConfirm();
+}
+async function handleClearForm() {
+  const r = await dialog({ icon: 'warning', title: 'ลบข้อมูลในฟอร์ม?', text: 'ข้อมูลที่กรอกและรูปภาพที่แนบไว้จะถูกล้างทั้งหมด', showCancelButton: true, confirmButtonText: 'ล้างข้อมูล', cancelButtonText: 'ยกเลิก', confirmButtonColor: cssVar('--danger') });
+  if (!r.isConfirmed) return;
+  resetForm(); $('#fFloor').value = ''; $('#fFloorOther').value = ''; syncFloorOther(); $('#fZone').value = '';
+  toast('success', 'ล้างข้อมูลในฟอร์มแล้ว');
+}
+
+async function handleSubmit() {
+  if (state.saving) return; // กันกดซ้ำระหว่างกำลังส่ง
+  const f = state.form;
+  const storeName = $('#fStore').value.trim(), inspector = getInspector();
+  const floor = getFloor(), zone = $('#fZone').value.trim(), shift = getShift() || shiftOf();
+  const need = (el, text) => { el.focus(); return dialog({ icon: 'warning', title: 'กรุณากรอกข้อมูลให้ครบถ้วน', text }); };
+  if (!storeName) return need($('#fStore'), 'กรุณาระบุชื่อร้านค้า / สถานที่ตรวจ');
+  if (!shift) return need($('#fShift'), 'กรุณาเลือกรอบการตรวจ');
+  if (!floor) return need($('#fFloor').value === OTHER_INSPECTOR ? $('#fFloorOther') : $('#fFloor'), 'กรุณาเลือกหรือระบุชั้นของจุดตรวจ');
+  if (!inspector) return need($('#fInspector').value === OTHER_INSPECTOR ? $('#fInspectorOther') : $('#fInspector'), 'กรุณาเลือกหรือระบุชื่อผู้ตรวจ');
+  if (f.processing) return toast('info', 'กรุณารอประมวลผลรูปภาพสักครู่');
+  if (!f.image) return dialog({ icon: 'warning', title: 'ยังไม่มีรูปภาพจุดตรวจ', text: 'กรุณาถ่ายภาพหรือเลือกรูปภาพจุดตรวจก่อนบันทึก' });
+
+  const tsReal = nowReal(), now = mallDate(tsReal);
+  if (!f.pendingId) f.pendingId = genId(now); // ส่งซ้ำหลังล้มเหลวจะใช้ ID เดิม → ไม่เกิดแถวซ้ำ
+  const record = {
+    ID: f.pendingId, Timestamp: tsReal.toISOString(), InspectionDate: fmtDMY(now), InspectionTime: fmtHMS(now),
+    InspectorName: inspector, Shift: shift, Floor: floor, Zone: zone, StoreName: storeName,
+    Status: f.confirmed ? STATUS_OK : STATUS_PENDING,
+    Note: $('#fNote').value.trim(), Details: $('#fDetails').value.trim(), ImageURL: '', ReportURL: ''
+  };
+
+  // 1) ประทับวัน–เวลาลงบนภาพ แล้วสร้างใบรายงาน เพื่อ "แสดงให้ตรวจสอบก่อน" จึงค่อยบันทึกจริง
+  const btn = $('#btnSubmit');
+  setBtnLoading(btn, true, 'กำลังประทับเวลาและสร้างใบรายงาน…');
+  let reportUrl, photoUrl, b64;
+  try {
+    photoUrl = await stampPhoto(f.image.dataUrl, {
+      stamp: `${fmtDMY(now)}  ${fmtHMS(now)} น.`, store: storeName, Floor: floor, Zone: zone, shift, inspector
+    });
+    b64 = photoUrl.split(',')[1] || '';
+    if (!b64) throw new Error('ประมวลผลรูปภาพไม่สำเร็จ');
+    if (b64.length * 0.75 > CONFIG.MAX_UPLOAD_BYTES) throw new Error('ไฟล์รูปภาพใหญ่เกินไป กรุณาถ่ายภาพใหม่หรือเลือกรูปที่ความละเอียดน้อยลง');
+    reportUrl = await buildReportImage(normalizeRecord(record), photoUrl);
+  } catch (err) {
+    setBtnLoading(btn, false);
+    return dialog({ icon: 'error', title: 'เตรียมข้อมูลก่อนบันทึกไม่สำเร็จ', text: err.message });
+  }
+  setBtnLoading(btn, false);
+  const summaryRow = (l, v) => `<tr><th style="text-align:left;padding:.15rem .5rem;color:var(--muted);font-weight:500;white-space:nowrap">${l}</th><td style="padding:.15rem .5rem;font-weight:600">${escapeHtml(v || '—')}</td></tr>`;
+  const pre = await dialog({
+    title: 'ตรวจสอบก่อนบันทึก',
+    html: `<div class="text-left text-sm" style="border:1px solid var(--border);border-radius:1rem;padding:.6rem;margin-bottom:.7rem">
+        <table style="width:100%">
+          ${summaryRow('ร้านค้า / สถานที่', storeName)}
+          ${summaryRow('รอบ / ชั้น / โซน', [`รอบ${shift}`, `ชั้น ${floor}`, zone && `โซน ${zone}`].filter(Boolean).join('  ·  '))}
+          ${summaryRow('ผู้ตรวจ', inspector)}
+          ${summaryRow('วันที่ – เวลา', `${record.InspectionDate}  ${record.InspectionTime} น.`)}
+          ${summaryRow('สถานะ', f.confirmed ? 'ยืนยันจุดตรวจแล้ว' : 'รอยืนยัน')}
+          ${record.Note ? summaryRow('หมายเหตุ', record.Note) : ''}
+        </table></div>
+      ${reportPreviewHtml(reportUrl)}
+      <div class="text-xs mt-2" style="color:var(--muted)">ภาพถ่ายถูกประทับวัน–เวลาและข้อมูลจุดตรวจไว้บนรูปแล้ว</div>
+      ${f.confirmed ? '' : `<div class="text-sm mt-2" style="color:var(--warn)">ยังไม่ได้กด "ยืนยันจุดตรวจ" — จะบันทึกสถานะเป็น "รอยืนยัน"</div>`}`,
+    width: 'min(94vw, 560px)', showCancelButton: true,
+    confirmButtonText: 'ยืนยันและบันทึก', cancelButtonText: 'กลับไปแก้ไข',
+    focusCancel: true   // กันกดยืนยันโดยไม่ตั้งใจ (ต้องเลือกปุ่มยืนยันเอง)
+  });
+  if (!pre.isConfirmed) return;
+
+  // 2) บันทึกข้อมูล + รูปจุดตรวจ + ไฟล์ใบรายงาน (เก็บใน Drive เพื่อเปิดย้อนหลังได้)
+  state.saving = true; setBtnLoading(btn, true, 'กำลังบันทึกข้อมูลและอัปโหลดไฟล์…');
+  let saved = null, queued = false;
+  const payload = {
+    record,
+    image: { base64: b64, mime: 'image/jpeg' },
+    report: { base64: reportUrl.split(',')[1], mime: 'image/jpeg' }
+  };
+  try {
+    if (!navigator.onLine && state.mode !== 'demo') throw new Error('ไม่มีสัญญาณอินเทอร์เน็ต');
+    const res = await API.create(payload);
+    saved = normalizeRecord({ ...record, ImageURL: res.imageUrl || '', ReportURL: res.reportUrl || '' });
+    addLocalRecord(saved); // อัปเดตแดชบอร์ดทันที ไม่ต้องรอโหลดใหม่
+    loadData({ silent: true }); // ซิงก์กับเซิร์ฟเวอร์เบื้องหลัง (ได้ URL จริงจาก Drive)
+  } catch (err) {
+    if (isNetworkError(err)) {
+      // เครือข่ายมีปัญหา → เก็บไว้ในเครื่อง (Outbox) แล้วส่งให้อัตโนมัติเมื่อกลับมาออนไลน์ ผู้ตรวจทำงานต่อได้ทันที
+      try {
+        await Outbox.add(payload); queued = true;
+        saved = Outbox.asRecords().find(r => r.ID === record.ID) || normalizeRecord({ ...record, _pending: true });
+        mergeRecords();
+      } catch (qe) {
+        dialog({ icon: 'error', title: 'บันทึกข้อมูลไม่สำเร็จ', html: `${escapeHtml(err.message)}<br><span class="text-sm" style="color:var(--muted)">และเก็บสำรองในเครื่องไม่ได้ (${escapeHtml(qe.message)}) — ข้อมูลในฟอร์มยังอยู่ครบ กดบันทึกอีกครั้งได้</span>` });
+      }
+    } else {
+      dialog({ icon: 'error', title: 'บันทึกข้อมูลไม่สำเร็จ', html: `${escapeHtml(err.message)}<br><br><span class="text-sm" style="color:var(--muted)">ข้อมูลในฟอร์มยังอยู่ครบ สามารถกดบันทึกอีกครั้งได้ ระบบป้องกันการบันทึกซ้ำให้อัตโนมัติ</span>` });
+    }
+  } finally {
+    state.saving = false; setBtnLoading(btn, false);
+  }
+  if (saved) { store.set('insp_inspector', inspector); resetForm(); renderShiftOptions({ auto: true }); }
+  // เปิดหน้าต่างใบรายงานหลังคืนสถานะปุ่มแล้ว (ปุ่มไม่ค้าง "กำลังบันทึก" ระหว่างดูใบรายงาน)
+  if (saved) await openReportViewer(reportUrl, saved, { justSaved: true, queued });
+}
 
 /* =============================================================================
    8b) REPORT IMAGE — ใบรายงานรูปภาพ (JPEG 1080px) สำหรับบันทึกเป็นไฟล์/ส่งต่อ
@@ -1484,7 +1894,10 @@ function openReportViewer(url, rec, { justSaved = false, queued = false } = {}) 
 async function buildDailyImage(D) {
   await ensureReportFonts();
   const W = 1080, P = 56, IW = W - P * 2, ROW = 92, MAXROWS = 30;
-  const rows = D.list.slice(0, MAXROWS), more = D.list.length - rows.length;
+  // รายวัน = แสดงรายการตรวจ · รายเดือน/ปี = แสดงอันดับร้านค้า
+  const byTime = D.type === 'day' || (D.type === 'week' && D.list.length <= MAXROWS);
+  const items = byTime ? D.list : D.storeAgg.all.map(([name, v]) => ({ store: name, n: v.n, ok: v.ok }));
+  const rows = items.slice(0, MAXROWS), more = items.length - rows.length;
   const HEADER = 250, KPI = 2 * 140 + 20, CHART = 360, LIST = 90 + rows.length * ROW + (more ? 60 : 0), INSP = 90 + Math.ceil(Math.min(D.inspectors.all.length, 10) / 2) * 64;
   const H = HEADER + 36 + KPI + 32 + CHART + 32 + INSP + 32 + LIST + 150;
   const c = document.createElement('canvas'); c.width = W; c.height = H;
@@ -1497,8 +1910,8 @@ async function buildDailyImage(D) {
   const hg = ctx.createLinearGradient(0, 0, W, HEADER); hg.addColorStop(0, BRAND.head[0]); hg.addColorStop(0.55, BRAND.head[1]); hg.addColorStop(1, BRAND.head[2]);
   ctx.fillStyle = hg; ctx.fillRect(0, 0, W, HEADER); glow(W * 0.85, 0, 380, 'rgba(255,255,255,.18)');
   if (BRAND_PNG) { try { const lg = await loadImg(BRAND_PNG); ctx.save(); rrect(ctx, P, 52, 140, 140, 32); ctx.clip(); ctx.drawImage(lg, P, 52, 140, 140); ctx.restore(); } catch (e) { /* ข้ามโลโก้ */ } }
-  ctx.fillStyle = '#fff'; ctx.font = `700 46px ${RPT_FONT}`; ctx.fillText('สรุปการตรวจร้านค้าประจำวัน', P + 170, 58);
-  ctx.font = `600 32px ${RPT_FONT}`; ctx.fillText(fmtThaiLong(D.day, true), P + 170, 120);
+  ctx.fillStyle = '#fff'; ctx.font = `700 46px ${RPT_FONT}`; ctx.fillText(`สรุปการตรวจร้านค้า${REP_NAME[D.type]}`, P + 170, 58);
+  ctx.font = `600 32px ${RPT_FONT}`; ctx.fillText(D.type === 'day' ? fmtThaiLong(D.day, true) : D.label, P + 170, 120);
   ctx.font = `500 25px ${RPT_FONT}`; ctx.globalAlpha = 0.9; ctx.fillText(`${CONFIG.APP_NAME} · ${CONFIG.ORG_NAME}`, P + 170, 168); ctx.globalAlpha = 1;
   const rb = ctx.createLinearGradient(0, 0, W, 0); BRAND.rainbow.forEach((col, i) => rb.addColorStop(i / 4, col));
   ctx.fillStyle = rb; ctx.fillRect(0, HEADER - 10, W, 10);
@@ -1516,7 +1929,7 @@ async function buildDailyImage(D) {
   y += KPI + 32;
   // Hourly chart (วาดเอง — ไม่ต้องพึ่ง Chart.js)
   card(P, y, IW, CHART);
-  ctx.fillStyle = '#11302d'; ctx.font = `700 30px ${RPT_FONT}`; ctx.fillText('จำนวนการตรวจรายชั่วโมง', P + 30, y + 24);
+  ctx.fillStyle = '#11302d'; ctx.font = `700 30px ${RPT_FONT}`; ctx.fillText(D.trend.title, P + 30, y + 24);
   const t = D.trend, n = t.labels.length, cx0 = P + 40, cw = IW - 80, base = y + CHART - 60, chH = CHART - 175; // เว้นที่ด้านบนให้หัวข้อ+ตัวเลขบนแท่ง
   const maxV = Math.max(1, ...t.labels.map((_, i) => t.ok[i] + t.pending[i])), bw = cw / n;
   ctx.strokeStyle = '#e3eceb'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx0, base); ctx.lineTo(cx0 + cw, base); ctx.stroke();
@@ -1542,20 +1955,33 @@ async function buildDailyImage(D) {
   y += INSP + 32;
   // รายการตามเวลา
   card(P, y, IW, LIST);
-  ctx.fillStyle = '#11302d'; ctx.font = `700 30px ${RPT_FONT}`; ctx.fillText('รายการตรวจ (เรียงตามเวลา)', P + 30, y + 24);
+  ctx.fillStyle = '#11302d'; ctx.font = `700 30px ${RPT_FONT}`; ctx.fillText(byTime ? 'รายการตรวจ (เรียงตามเวลา)' : 'ร้านค้า/สถานที่ที่ตรวจมากที่สุด', P + 30, y + 24);
   rows.forEach((r, i) => {
     const ry = y + 80 + i * ROW;
     if (i % 2 === 0) { rrect(ctx, P + 16, ry - 6, IW - 32, ROW - 6, 16); ctx.fillStyle = '#f4f8f8'; ctx.fill(); }
-    ctx.fillStyle = '#0891b2'; ctx.font = `700 28px ${RPT_FONT}`; ctx.fillText(fmtHMS(r._date).slice(0, 5), P + 32, ry + 16);
-    ctx.fillStyle = '#11302d'; ctx.font = `600 28px ${RPT_FONT}`; ctx.fillText(wrapText(ctx, r.StoreName, IW - 420, 1)[0], P + 140, ry + 2);
+    if (!byTime) {
+      ctx.fillStyle = '#0891b2'; ctx.font = `700 28px ${RPT_FONT}`; ctx.fillText(String(i + 1), P + 32, ry + 16);
+      ctx.fillStyle = '#11302d'; ctx.font = `600 28px ${RPT_FONT}`; ctx.fillText(wrapText(ctx, r.store, IW - 420, 1)[0], P + 140, ry + 2);
+      ctx.fillStyle = '#5b726f'; ctx.font = `400 22px ${RPT_FONT}`; ctx.fillText(`ยืนยันแล้ว ${r.n ? (r.ok / r.n * 100).toFixed(0) : 0}%`, P + 140, ry + 42);
+      const label = `${nf(r.n)} ครั้ง`;
+      ctx.font = `700 26px ${RPT_FONT}`; const pw = ctx.measureText(label).width + 36, px = P + IW - 32 - pw;
+      rrect(ctx, px, ry + 14, pw, 44, 22); ctx.fillStyle = '#e0f2fe'; ctx.fill();
+      ctx.fillStyle = '#0369a1'; ctx.fillText(label, px + 18, ry + 22);
+      return;
+    }
+    // คอลัมน์เวลา: รายวันใช้ชั่วโมง:นาที · ช่วงอื่นใส่วันที่ด้วย จึงต้องกว้างกว่า ไม่งั้นทับชื่อร้าน
+    const tw = D.type === 'day' ? 108 : 190, tx = P + 32 + tw;
+    ctx.fillStyle = '#0891b2'; ctx.font = `700 ${D.type === 'day' ? 28 : 24}px ${RPT_FONT}`;
+    ctx.fillText(D.type === 'day' ? fmtHMS(r._date).slice(0, 5) : `${pad2(r._date.getDate())}/${pad2(r._date.getMonth() + 1)} ${fmtHMS(r._date).slice(0, 5)}`, P + 32, ry + 16);
+    ctx.fillStyle = '#11302d'; ctx.font = `600 28px ${RPT_FONT}`; ctx.fillText(wrapText(ctx, r.StoreName, IW - tw - 330, 1)[0], tx, ry + 2);
     ctx.fillStyle = '#5b726f'; ctx.font = `400 22px ${RPT_FONT}`;
-    ctx.fillText(wrapText(ctx, [r.Shift ? `รอบ${r.Shift}` : '', floorZone(r), r.InspectorName].filter(Boolean).join(' · '), IW - 420, 1)[0], P + 140, ry + 42);
+    ctx.fillText(wrapText(ctx, [r.Shift ? `รอบ${r.Shift}` : '', floorZone(r), r.InspectorName].filter(Boolean).join(' · '), IW - tw - 330, 1)[0], tx, ry + 42);
     const ok = r._ok, label = ok ? 'ยืนยันแล้ว' : 'รอยืนยัน';
     ctx.font = `600 22px ${RPT_FONT}`; const pw = ctx.measureText(label).width + 36, px = P + IW - 32 - pw;
     rrect(ctx, px, ry + 14, pw, 44, 22); ctx.fillStyle = ok ? '#d1fae5' : '#fef3c7'; ctx.fill();
     ctx.fillStyle = ok ? '#047857' : '#b45309'; ctx.fillText(label, px + 18, ry + 22);
   });
-  if (more) { ctx.fillStyle = '#5b726f'; ctx.font = `500 26px ${RPT_FONT}`; ctx.textAlign = 'center'; ctx.fillText(`… และอีก ${nf(more)} รายการ (ดูทั้งหมดในแดชบอร์ด)`, W / 2, y + LIST - 50); ctx.textAlign = 'left'; }
+  if (more) { ctx.fillStyle = '#5b726f'; ctx.font = `500 26px ${RPT_FONT}`; ctx.textAlign = 'center'; ctx.fillText(`… และอีก ${nf(more)} ${byTime ? 'รายการ' : 'ร้านค้า'} (ดูทั้งหมดในแดชบอร์ด)`, W / 2, y + LIST - 50); ctx.textAlign = 'left'; }
   // Footer
   const fy = H - 118; ctx.fillStyle = rb; ctx.fillRect(P, fy, IW, 4);
   const now = nowMall(); ctx.fillStyle = '#5b726f'; ctx.font = `500 25px ${RPT_FONT}`;
@@ -1565,17 +1991,17 @@ async function buildDailyImage(D) {
 }
 async function openDailyReport() {
   const D = dailyData();
-  if (!D.list.length) return toast('info', 'ไม่มีการตรวจในวันที่เลือก');
+  if (!D.list.length) return toast('info', 'ไม่มีการตรวจในช่วงที่เลือก');
   const btn = $('#btnDailyLine'); setBtnLoading(btn, true, 'กำลังสร้างใบสรุป…');
   try {
     const url = await buildDailyImage(D);
-    await openImageViewer({ url, title: 'ใบสรุปการตรวจประจำวัน', fileName: `สรุปการตรวจประจำวัน_${toISODate(D.day)}.jpg`, text: dailyText(D) });
+    await openImageViewer({ url, title: `ใบสรุปการตรวจ${REP_NAME[D.type]}`, fileName: `สรุปการตรวจ${REP_NAME[D.type]}_${toISODate(D.day)}.jpg`, text: dailyText(D) });
   } catch (err) { dialog({ icon: 'error', title: 'สร้างใบสรุปไม่สำเร็จ', text: err.message }); }
   finally { setBtnLoading(btn, false); }
 }
 async function copyDailyText() {
   const D = dailyData(); const text = dailyText(D);
-  const r = await dialog({ title: 'ข้อความสรุปประจำวัน', html: `<textarea class="input" rows="10" style="font-size:.85rem" readonly>${escapeHtml(text)}</textarea>`, width: 'min(94vw,560px)', showCancelButton: true, confirmButtonText: 'คัดลอกข้อความ', cancelButtonText: 'ปิด' });
+  const r = await dialog({ title: `ข้อความสรุป${REP_NAME[D.type]}`, html: `<textarea class="input" rows="10" style="font-size:.85rem" readonly>${escapeHtml(text)}</textarea>`, width: 'min(94vw,560px)', showCancelButton: true, confirmButtonText: 'คัดลอกข้อความ', cancelButtonText: 'ปิด' });
   if (r.isConfirmed) { try { await navigator.clipboard.writeText(text); toast('success', 'คัดลอกข้อความแล้ว'); } catch (e) { toast('error', 'คัดลอกไม่สำเร็จ — เลือกข้อความแล้วคัดลอกเองได้'); } }
 }
 
@@ -1774,7 +2200,7 @@ function setDashTab(tab) {
   $$('.dash-tabs [data-tab]').forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
   $$('[data-pane]').forEach(p => { p.hidden = p.dataset.pane !== tab; });
   $('#periodBar').hidden = tab === 'daily';
-  $('#printLabel').textContent = tab === 'daily' ? 'พิมพ์รายงานรายวัน' : 'พิมพ์รายงาน';
+  $('#printLabel').textContent = tab === 'daily' ? `พิมพ์รายงาน${REP_NAME[state.repType] || ''}` : 'พิมพ์รายงาน';
   if (state.loaded) renderDashboard();
 }
 function renderDashboard() {
@@ -1787,6 +2213,7 @@ function renderDashboard() {
   // ตรวจความถูกต้องของตัวกรองทุกครั้งที่ช่วงเวลาเปลี่ยน (ไม่ใช่เฉพาะตอนเปิดแท็บประวัติ)
   // ไม่งั้นค่าที่ค้างอยู่จะทำให้ CSV/รายงานที่พิมพ์ออกมาว่างเปล่าโดยไม่มีสาเหตุที่เห็นได้
   safeRun('historyFilters', () => renderHistoryFilters(list));
+  if (state.dashTab === 'daily') $('#printLabel').textContent = `พิมพ์รายงาน${REP_NAME[state.repType]}`;
   if (state.dashTab === 'overview') {
     safeRun('kpi', () => renderKPIs(list, rg));
     safeRun('charts', () => renderCharts(list, rg));
@@ -1995,22 +2422,45 @@ function renderRecentFeed() {
 
 /* ---------- รายงานรายวัน ---------- */
 const toISODate = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-function dailyData(day = state.dailyDate) {
-  const list = state.records.filter(r => inRange(r._date, dayRange(day))).sort((a, b) => a._date - b._date);
+const REP_NAME = { day: 'ประจำวัน', week: 'ประจำสัปดาห์', month: 'ประจำเดือน', year: 'ประจำปี' };
+/** ข้อมูลรายงานสรุปของช่วงที่เลือก (รายวัน / รายเดือน / รายปี) */
+function dailyData(anchor = state.dailyDate, type = state.repType) {
+  const rg = getPeriodRange(type, anchor);
+  const list = state.records.filter(r => inRange(r._date, rg)).sort((a, b) => a._date - b._date);
   const ok = list.filter(r => r._ok).length;
+  const trend = type === 'day' ? trimHours(buildTrend('day', rg, list)) : buildTrend(type, rg, list);
   return {
-    day, list, ok, pending: list.length - ok,
+    type, day: anchor, range: rg, label: rg.label, list, ok, pending: list.length - ok,
     stores: new Set(list.map(r => r.StoreName.trim()).filter(Boolean)).size,
     inspectors: buildAgg(list, r => r.InspectorName.trim()),
     floors: buildAgg(list, r => r.Floor ? `ชั้น ${r.Floor}` : ''),
     shifts: buildAgg(list, r => r.Shift ? `รอบ${r.Shift}` : '(ไม่ระบุรอบ)'),
-    trend: trimHours(buildTrend('day', dayRange(day), list))
+    storeAgg: buildAgg(list, r => r.StoreName.trim()),
+    trend
   };
+}
+function syncReportControls(D) {
+  $$('#repSeg button').forEach(b => b.classList.toggle('active', b.dataset.rep === state.repType));
+  const d = state.dailyDate;
+  // รายสัปดาห์เลือกจาก "วันใดก็ได้ในสัปดาห์นั้น" จึงใช้ช่องวันที่เหมือนรายวัน
+  $('#repDate').hidden = !['day', 'week'].includes(state.repType);
+  $('#repMonth').hidden = state.repType !== 'month';
+  $('#repYear').hidden = state.repType !== 'year';
+  $('#repDate').value = toISODate(d);
+  $('#repMonth').value = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
+  // ปีให้เลือกจากปีที่มีข้อมูลจริง + ปีปัจจุบัน (แสดงเป็น พ.ศ.)
+  const years = [...new Set(state.records.map(r => r._date && r._date.getFullYear()).filter(Boolean).concat([nowMall().getFullYear(), d.getFullYear()]))].sort((a, b) => b - a);
+  $('#repYear').innerHTML = years.map(y => `<option value="${y}">ปี พ.ศ. ${y + 543}</option>`).join('');
+  $('#repYear').value = String(d.getFullYear());
+  $('#dayLabel').textContent = state.repType === 'day' ? fmtThaiLong(d, true) : D.label;
+  $('#btnDailyLineLabel').textContent = `ใบสรุป${REP_NAME[state.repType]} (รูปภาพ)`;
+  $('#repChartTitle').textContent = D.trend.title;
+  $('#repChartSub').textContent = { day: 'ช่วงเวลาที่มีการตรวจ', week: 'แยกตามวันในสัปดาห์ (จันทร์–อาทิตย์)', month: 'แยกตามวันที่ในเดือน', year: 'แยกตามเดือน' }[state.repType];
+  $('#repBreakSub').textContent = D.label;
 }
 function renderDaily() {
   const D = dailyData();
-  $('#dayPicker').value = toISODate(state.dailyDate);
-  $('#dayLabel').textContent = fmtThaiLong(state.dailyDate, true);
+  syncReportControls(D);
   const stats = [
     ['ตรวจทั้งหมด', D.list.length, 'clipboard', '#0d9488'], ['ยืนยันแล้ว', D.ok, 'check-circle', '#059669'], ['รอยืนยัน', D.pending, 'hourglass', '#d97706'],
     ['ร้านค้า/สถานที่', D.stores, 'store', '#6366f1'],
@@ -2024,10 +2474,17 @@ function renderDaily() {
   if (empty) return;
   if (typeof Chart !== 'undefined') mountChart('hourly', '#chartHourly', trendConfig(D.trend, screenPalette()));
   $('#dailyBreakdown').innerHTML = `<div class="text-xs font-bold muted mb-1">แยกตามรอบการตรวจ</div>${rankRows(D.shifts, { max: 4, colorOffset: 8 })}<div class="text-xs font-bold muted mt-3 mb-1">แยกตามชั้น</div>${rankRows(D.floors, { max: 5 })}<div class="text-xs font-bold muted mt-3 mb-1">แยกตามผู้ตรวจ</div>${rankRows(D.inspectors, { max: 5, colorOffset: 3 })}`;
-  $('#dailyCount').textContent = `${nf(D.list.length)} รายการ · เรียงตามเวลา`;
+  // รายวัน = ไล่ตามเวลา · รายเดือน/รายปี = จัดอันดับร้านค้า (รายการเยอะเกินกว่าจะไล่ทีละรายการ)
+  const byTime = D.type === 'day' || (D.type === 'week' && D.list.length <= 120);
+  $('#repListTitle').textContent = byTime ? (D.type === 'day' ? 'ลำดับการตรวจของวัน' : 'ลำดับการตรวจของสัปดาห์') : 'ร้านค้า/สถานที่ที่ตรวจมากที่สุด';
+  $('#dailyCount').textContent = byTime ? `${nf(D.list.length)} รายการ · เรียงตามเวลา${D.type === 'week' ? ` · ${escapeHtml(D.label)}` : ''}`
+    : `${nf(D.list.length)} รายการ · ${nf(D.storeAgg.total)} ร้านค้า/สถานที่ · ${escapeHtml(D.label)}`;
+  $('#dailyTimeline').hidden = !byTime;
+  $('#repRankList').hidden = byTime;
+  if (!byTime) { $('#repRankList').innerHTML = rankRows(D.storeAgg, { max: 20 }); $('#dailyTimeline').innerHTML = ''; return; }
   $('#dailyTimeline').innerHTML = D.list.map(r => `
     <div class="tl-item" data-open="${escapeHtml(r.ID)}" role="button" tabindex="0">
-      <div class="tl-time">${fmtHMS(r._date).slice(0, 5)}<span class="tl-dot ${r._ok ? 'ok' : 'warn'}"></span></div>
+      <div class="tl-time">${D.type === 'day' ? fmtHMS(r._date).slice(0, 5) : `${pad2(r._date.getDate())}/${pad2(r._date.getMonth() + 1)}<br><span style="font-size:.78rem">${fmtHMS(r._date).slice(0, 5)}</span>`}<span class="tl-dot ${r._ok ? 'ok' : 'warn'}"></span></div>
       <div class="tl-card">
         ${thumbHtml(r)}
         <div class="min-w-0 flex-1">
@@ -2043,10 +2500,17 @@ function renderDaily() {
 function dailyText(D) {
   const done = new Set(D.list.map(r => r.Shift.trim()).filter(Boolean));
   const missing = CONFIG.SHIFTS.map(sh => sh.name).filter(n => !done.has(n));
-  const lines = [`📊 สรุปการตรวจร้านค้าประจำวัน`, `📅 ${fmtThaiLong(D.day, true)}`, `✅ ตรวจทั้งหมด ${nf(D.list.length)} รายการ (ยืนยัน ${nf(D.ok)} · รอยืนยัน ${nf(D.pending)})`,
+  const lines = [`📊 สรุปการตรวจร้านค้า${REP_NAME[D.type]}`, `📅 ${D.type === 'day' ? fmtThaiLong(D.day, true) : D.label}`, `✅ ตรวจทั้งหมด ${nf(D.list.length)} รายการ (ยืนยัน ${nf(D.ok)} · รอยืนยัน ${nf(D.pending)})`,
     `🕒 รอบที่ตรวจแล้ว: ${done.size ? [...done].map(n => `รอบ${n}`).join(', ') : '—'}${missing.length ? ` · ⚠️ ยังไม่มีรายการ: ${missing.map(n => `รอบ${n}`).join(', ')}` : ''}`,
     `🏬 ร้านค้า/สถานที่ ${nf(D.stores)} แห่ง · 👤 ผู้ตรวจ ${nf(D.inspectors.total)} คน`, ''];
-  D.list.slice(0, 40).forEach((r, i) => lines.push(`${i + 1}. ${fmtHMS(r._date).slice(0, 5)} ${r.StoreName}${floorZone(r) ? ` (${floorZone(r)})` : ''}${r.Shift ? ` [รอบ${r.Shift}]` : ''} — ${r._ok ? '✅' : '⏳'} ${r.InspectorName}`));
+  if (D.type !== 'day' && D.type !== 'week') {
+    lines.push('🏆 ร้านค้า/สถานที่ที่ตรวจมากที่สุด');
+    D.storeAgg.all.slice(0, 20).forEach(([name, v], i) => lines.push(`${i + 1}. ${name} — ${nf(v.n)} ครั้ง (ยืนยัน ${v.n ? (v.ok / v.n * 100).toFixed(0) : 0}%)`));
+    if (D.storeAgg.all.length > 20) lines.push(`… และอีก ${nf(D.storeAgg.all.length - 20)} ร้าน`);
+    lines.push('', `${CONFIG.APP_NAME} · ${CONFIG.ORG_NAME}`);
+    return lines.join('\n');
+  }
+  D.list.slice(0, 40).forEach((r, i) => lines.push(`${i + 1}. ${D.type === 'day' ? '' : fmtDMY(r._date).slice(0, 5) + ' '}${fmtHMS(r._date).slice(0, 5)} ${r.StoreName}${floorZone(r) ? ` (${floorZone(r)})` : ''}${r.Shift ? ` [รอบ${r.Shift}]` : ''} — ${r._ok ? '✅' : '⏳'} ${r.InspectorName}`));
   if (D.list.length > 40) lines.push(`… และอีก ${nf(D.list.length - 40)} รายการ`);
   lines.push('', `${CONFIG.APP_NAME} · ${CONFIG.ORG_NAME}`);
   return lines.join('\n');
@@ -2277,7 +2741,14 @@ async function printSlip() {
 /** รายงานประจำวัน A4: KPI + กราฟรายชั่วโมง + แยกชั้น/ผู้ตรวจ + รายการพร้อมรูปย่อ */
 async function printDaily() {
   const D = dailyData();
-  if (!D.list.length) return toast('info', 'ไม่มีการตรวจในวันที่เลือก');
+  if (!D.list.length) return toast('info', 'ไม่มีการตรวจในช่วงที่เลือก');
+  if (D.type !== 'day') {
+    // รายสัปดาห์/เดือน/ปี ใช้แบบฟอร์มรายงานตามช่วงเวลา (มีบทสรุป กราฟ และตารางรายการครบ)
+    const keep = { ...state.period };
+    state.period = { type: D.type, anchor: D.day };
+    try { await printReport(); } finally { state.period = keep; renderDashboard(); }
+    return;
+  }
   if (typeof Chart === 'undefined') return toast('error', 'ไม่สามารถสร้างกราฟได้ (โหลด Chart.js ไม่สำเร็จ)');
   const btn = $('#btnDailyPrint'); setBtnLoading(btn, true, 'กำลังจัดหน้า…');
   try {
@@ -2497,6 +2968,21 @@ function checkLibraries() {
 function handleEvents() {
   $$('[data-nav]').forEach(b => b.addEventListener('click', () => showView(b.dataset.nav)));
   $('#themeBtn').addEventListener('click', () => applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+  // Form
+  $('#formBackBtn').addEventListener('click', () => { if (location.hash) history.replaceState(null, '', location.pathname + location.search); showView('dashboard'); });
+  $('#formClearBtn').addEventListener('click', handleClearForm);
+  $('#btnCamera').addEventListener('click', () => $('#fileCamera').click());
+  if ($('#btnGallery')) $('#btnGallery').addEventListener('click', () => $('#fileGallery').click());
+  $('#fileCamera').addEventListener('change', handleFile);
+  if ($('#fileGallery')) $('#fileGallery').addEventListener('change', handleFile);
+  $('#photoBox').addEventListener('click', () => { if (state.form.processing) return; state.form.image ? openPhotoPreview(state.form.image.dataUrl, $('#fStore').value.trim()) : $('#fileCamera').click(); });
+  $('#photoBox').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#photoBox').click(); } });
+  $('#btnRemovePhoto').addEventListener('click', () => { state.form.image = null; renderPhoto(); });
+  $('#confirmToggle').addEventListener('click', () => { state.form.confirmed = !state.form.confirmed; renderConfirm(); if (navigator.vibrate) navigator.vibrate(15); });
+  $('#fInspector').addEventListener('change', () => { syncInspectorOther(); if ($('#fInspector').value === OTHER_INSPECTOR) $('#fInspectorOther').focus(); });
+  $('#fFloor').addEventListener('change', () => { syncFloorOther(); if ($('#fFloor').value === OTHER_INSPECTOR) $('#fFloorOther').focus(); });
+  $('#fShift').addEventListener('change', () => renderShiftOptions());
+  $('#btnSubmit').addEventListener('click', handleSubmit);
   // Detail
   $('#detailReportBtn').addEventListener('click', () => { if (state.currentDetail) openRecordReport(state.currentDetail); });
   $('#detailBackBtn').addEventListener('click', () => showView('dashboard'));
@@ -2514,10 +3000,13 @@ function handleEvents() {
   $('#periodNow').addEventListener('click', () => { state.period.anchor = nowMall(); rerender(); });
   // รายงานรายวัน
   const setDay = d => { state.dailyDate = startOfDay(d); renderDashboard(); };
-  $('#dayPrev').addEventListener('click', () => setDay(addDays(state.dailyDate, -1)));
-  $('#dayNext').addEventListener('click', () => setDay(addDays(state.dailyDate, 1)));
+  $$('#repSeg button').forEach(b => b.addEventListener('click', () => { state.repType = b.dataset.rep; renderDashboard(); }));
+  $('#dayPrev').addEventListener('click', () => setDay(shiftAnchor(state.repType, state.dailyDate, -1)));
+  $('#dayNext').addEventListener('click', () => setDay(shiftAnchor(state.repType, state.dailyDate, 1)));
   $('#dayToday').addEventListener('click', () => setDay(nowMall()));
-  $('#dayPicker').addEventListener('change', e => { const [y, m, d] = e.target.value.split('-').map(Number); if (y) setDay(new Date(y, m - 1, d)); });
+  $('#repDate').addEventListener('change', e => { const [y, m, d] = e.target.value.split('-').map(Number); if (y) setDay(new Date(y, m - 1, d)); });
+  $('#repMonth').addEventListener('change', e => { const [y, m] = e.target.value.split('-').map(Number); if (y) setDay(new Date(y, m - 1, 1)); });
+  $('#repYear').addEventListener('change', e => { const y = Number(e.target.value); if (y) setDay(new Date(y, 0, 1)); });
   $('#btnDailyLine').addEventListener('click', openDailyReport);
   $('#btnDailyText').addEventListener('click', copyDailyText);
   $('#btnDailyPrint').addEventListener('click', printDaily);
@@ -2542,6 +3031,12 @@ function handleEvents() {
   $('#view-dashboard').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-open]')) { e.preventDefault(); openDetail(e.target.dataset.open); } });
   // การเชื่อมต่อ
   $('#syncBadge').addEventListener('click', showConnectionInfo);
+  // ทางลัดลับสำหรับหัวหน้างาน: เปิดหน้าบันทึกการตรวจในแอปแดชบอร์ด (เมนูถูกซ่อนไว้)
+  window.addEventListener('hashchange', () => { if (/form/i.test(location.hash || '')) showView('form'); });
+  if (CONFIG.APP_ROLE === 'dashboard') {
+    const logo = $('#brandLogo');
+    if (logo) logo.addEventListener('dblclick', e => { e.preventDefault(); showView('form'); toast('info', 'เปิดหน้าบันทึกการตรวจ (เมนูซ่อนอยู่)'); });
+  }
   window.addEventListener('online', () => { NET.online = true; renderSyncBadge(); toast('success', 'กลับมาออนไลน์แล้ว'); Outbox.flush(); loadData({ silent: true }); });
   window.addEventListener('offline', () => { NET.online = false; renderSyncBadge(); toast('warning', 'ขาดการเชื่อมต่ออินเทอร์เน็ต — บันทึกได้ตามปกติ ระบบจะส่งให้เมื่อออนไลน์'); });
   window.addEventListener('afterprint', () => { $('#printArea').innerHTML = ''; Idle.reset(); });
@@ -2564,8 +3059,12 @@ function init() {
   renderSyncBadge();
   checkLibraries();
   handleEvents();
+  renderInspectorOptions(); renderFloorOptions(); renderShiftOptions({ auto: true });
   updateClock(); setInterval(updateClock, 1000);
-  showView('dashboard');
+  applyPhotoMode(); renderPhoto(); renderConfirm();
+  // แอปแดชบอร์ดเปิดที่หน้าสรุปเสมอ — หน้าบันทึกยังมีอยู่แต่ซ่อนเมนูไว้ (เข้าถึงด้วย #form)
+  const wantForm = /form/i.test(location.hash || '');
+  showView(CONFIG.APP_ROLE === 'dashboard' && !wantForm ? 'dashboard' : 'form');
   setDashTab('overview');
   Outbox.refresh().then(() => { mergeRecords(); Outbox.flush(); }); // มีรายการค้างจากครั้งก่อน → ส่งต่อให้
   loadData({ silent: true });    // โหลดล่วงหน้าเพื่อเติมรายชื่อร้านค้าใน datalist
