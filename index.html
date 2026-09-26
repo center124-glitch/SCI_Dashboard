@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ============================================================================
-   SBK Store Inspect — ระบบบันทึกการตรวจร้านค้า & แดชบอร์ดสรุปผล   SCI_Dashboard_v12.html v12.0 — แอปแดชบอร์ดสรุปผล (บันทึกการตรวจได้ด้วย) · โทนคราม–ม่วง
+   SBK Store Inspect — ระบบบันทึกการตรวจร้านค้า & แดชบอร์ดสรุปผล   SCI_Dashboard_v13.html v13.0 — แอปแดชบอร์ดสรุปผล (บันทึกการตรวจได้ด้วย) · โทนคราม–ม่วง
    v4.0: แดชบอร์ดโฉมใหม่ 3 แท็บ (ภาพรวม / รายงานรายวัน / ประวัติ), รายงานประจำวัน (LINE + A4),
          เชื่อมต่อทนทานขึ้น (retry, fetch→JSONP สำรอง, แคช, Outbox ออฟไลน์, รีเฟรชอัตโนมัติ)
    v3.0: รายชื่อผู้ตรวจ, ชั้น/โซน, ตัด GPS, ฝัง URL Web App, ใบรายงาน LINE (ดูตัวอย่างก่อนบันทึก,
@@ -262,7 +262,9 @@ html[data-theme="dark"] .brand-title{background:linear-gradient(90deg,#5eead4,#7
 @media (min-width:1700px){ .app-container{padding-left:3rem;padding-right:3rem} }
 
 /* แถบเลือกช่วงเวลาในแถบหัว (โทนกระจกให้อ่านง่ายบนพื้นไล่สี) */
-.hero-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;margin-top:1rem;color:#fff}
+.hero-tabsrow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:.6rem;margin-top:1.1rem}
+.hero-tabsrow .dash-tabs{margin-top:0;flex:0 0 auto}
+.hero-bar{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;color:#fff;margin-left:auto;padding-bottom:.45rem}
 .hero-bar .btn-glass{padding:.5rem .9rem}
 .seg-hero{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.28)}
 .seg-hero button{color:rgba(255,255,255,.85)}
@@ -271,7 +273,7 @@ html[data-theme="dark"] .brand-title{background:linear-gradient(90deg,#5eead4,#7
 html[data-theme="dark"] .seg.seg-hero button.active{background:#f1f5f9;color:#111827}
 .icon-btn-hero{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3);color:#fff}
 .icon-btn-hero:hover{background:rgba(255,255,255,.28);border-color:rgba(255,255,255,.45);color:#fff}
-@media (min-width:1024px){ .hero-bar{margin-top:1.1rem} .hero-bar > div:last-child{margin-left:auto} }
+@media (max-width:1180px){ .hero-bar{margin-left:0;width:100%;padding-bottom:.6rem} .hero-tabsrow{align-items:stretch;flex-direction:column-reverse} .hero-tabsrow .dash-tabs{width:100%} }
 @media (max-width:640px){
   .hero-bar{gap:.5rem}
   #periodSeg{display:grid;grid-template-columns:repeat(4,1fr);width:100%}
@@ -568,7 +570,13 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
           <button class="btn btn-white" id="btnPrintReport"><span data-icon="printer"></span><span id="printLabel">พิมพ์รายงาน</span></button>
         </div>
       </div>
-      <!-- แถบเลือกช่วงเวลาอยู่ในแถบหัว แถวเดียวกับแท็บ — ลดความสูงของหน้าและหาง่ายขึ้น -->
+      <!-- แท็บ + แถบเลือกช่วงเวลา อยู่แถวเดียวกัน (จอเล็กจะตกบรรทัดให้เอง) -->
+      <div class="hero-tabsrow">
+        <div class="dash-tabs" role="tablist">
+          <button role="tab" data-tab="overview" class="active"><span data-icon="chart"></span>ภาพรวม</button>
+          <button role="tab" data-tab="daily"><span data-icon="calendar"></span>รายงานสรุป</button>
+          <button role="tab" data-tab="history"><span data-icon="clipboard"></span>ประวัติการตรวจ</button>
+        </div>
       <div class="hero-bar" id="periodBar">
         <div class="seg seg-hero overflow-x-auto max-w-full" id="periodSeg">
           <button data-period="day">รายวัน</button>
@@ -583,10 +591,6 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
           <button class="btn btn-glass" id="periodNow">ปัจจุบัน</button>
         </div>
       </div>
-      <div class="dash-tabs" role="tablist">
-        <button role="tab" data-tab="overview" class="active"><span data-icon="chart"></span>ภาพรวม</button>
-        <button role="tab" data-tab="daily"><span data-icon="calendar"></span>รายงานสรุป</button>
-        <button role="tab" data-tab="history"><span data-icon="clipboard"></span>ประวัติการตรวจ</button>
       </div>
     </div>
 
@@ -2312,6 +2316,38 @@ const vGrad = (c1, c2) => ctx => {
   if (!a) return c1;
   const g = chart.ctx.createLinearGradient(0, a.bottom, 0, a.top); g.addColorStop(0, c1); g.addColorStop(1, c2); return g;
 };
+/** ปลั๊กอินเขียนตัวเลขรวมไว้บนหัวแท่ง (กราฟแบบซ้อน) — อ่านค่าได้ทันทีโดยไม่ต้องชี้เมาส์
+    ซ่อนให้อัตโนมัติเมื่อแท่งถี่จนตัวเลขจะทับกัน */
+function barTotalsPlugin(pal) {
+  return {
+    id: 'barTotals',
+    afterDatasetsDraw(chart) {
+      const { ctx, data, chartArea } = chart;
+      if (!chartArea || !data.labels || !data.labels.length) return;
+      const meta0 = chart.getDatasetMeta(0);
+      if (!meta0 || !meta0.data || !meta0.data.length) return;
+      const slot = (chartArea.right - chartArea.left) / data.labels.length;
+      if (slot < 22) return;                          // แท่งถี่เกินไป → ไม่เขียนตัวเลข
+      ctx.save();
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.font = `700 ${slot < 34 ? 10 : 12}px 'IBM Plex Sans Thai', sans-serif`;
+      ctx.fillStyle = pal.strong;
+      data.labels.forEach((_, i) => {
+        let total = 0, topY = chartArea.bottom, x = null;
+        chart.data.datasets.forEach((ds, di) => {
+          if (!chart.isDatasetVisible(di)) return;
+          const el = chart.getDatasetMeta(di).data[i];
+          const v = Number(ds.data[i]) || 0;
+          total += v;
+          if (el && v > 0) { topY = Math.min(topY, el.y); x = el.x; }
+        });
+        if (!total || x == null) return;
+        ctx.fillText(nf(total), x, Math.max(topY - 4, chartArea.top + 12));
+      });
+      ctx.restore();
+    }
+  };
+}
 function trendConfig(t, pal) {
   const okBg = pal.gradient ? vGrad('#059669', '#34d399') : pal.ok, pdBg = pal.gradient ? vGrad('#ea580c', '#fbbf24') : pal.warn;
   return {
@@ -2320,8 +2356,10 @@ function trendConfig(t, pal) {
       { label: 'ยืนยันแล้ว', data: t.ok, backgroundColor: okBg, borderRadius: 7, borderSkipped: false, maxBarThickness: 34, stack: 's' },
       { label: 'รอยืนยัน', data: t.pending, backgroundColor: pdBg, borderRadius: 7, borderSkipped: false, maxBarThickness: 34, stack: 's' }
     ] },
+    plugins: [barTotalsPlugin(pal)],
     options: {
       maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+      layout: { padding: { top: 18 } },   // เว้นที่ด้านบนให้ตัวเลขบนหัวแท่ง
       plugins: { legend: { position: 'bottom', labels: { color: pal.text, usePointStyle: true, boxWidth: 8, padding: 16 } },
         tooltip: { padding: 10, cornerRadius: 10, callbacks: { footer: items => `รวม ${nf(items.reduce((s, i) => s + i.parsed.y, 0))} ครั้ง` } } },
       scales: { x: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { color: pal.text, maxRotation: 0, autoSkip: true } },
