@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ============================================================================
-   SBK Store Inspect — ระบบบันทึกการตรวจร้านค้า & แดชบอร์ดสรุปผล   SCI_Dashboard_v13.html v13.0 — แอปแดชบอร์ดสรุปผล (บันทึกการตรวจได้ด้วย) · โทนคราม–ม่วง
+   SBK Store Inspect — ระบบบันทึกการตรวจร้านค้า & แดชบอร์ดสรุปผล   SCI_Dashboard_v14.html v14.0 — แอปแดชบอร์ดสรุปผล (บันทึกการตรวจได้ด้วย) · โทนคราม–ม่วง
    v4.0: แดชบอร์ดโฉมใหม่ 3 แท็บ (ภาพรวม / รายงานรายวัน / ประวัติ), รายงานประจำวัน (LINE + A4),
          เชื่อมต่อทนทานขึ้น (retry, fetch→JSONP สำรอง, แคช, Outbox ออฟไลน์, รีเฟรชอัตโนมัติ)
    v3.0: รายชื่อผู้ตรวจ, ชั้น/โซน, ตัด GPS, ฝัง URL Web App, ใบรายงาน LINE (ดูตัวอย่างก่อนบันทึก,
@@ -280,6 +280,15 @@ html[data-theme="dark"] .seg.seg-hero button.active{background:#f1f5f9;color:#11
   .hero-bar > div:last-child{width:100%;justify-content:space-between}
   .hero-bar #periodLabel{min-width:0;flex:1;font-size:.92rem}
 }
+
+/* ตารางเปรียบเทียบข้ามช่วง */
+.cmp-table{width:100%}
+.cmp-table th{position:sticky;top:0}
+.cmp-table tbody tr{cursor:default}
+.cmp-up{color:var(--ok);font-weight:700}
+.cmp-down{color:var(--danger);font-weight:700}
+.cmp-flat{color:var(--muted);font-weight:600}
+.cmp-table small{font-weight:600;opacity:.85}
 
 /* Toast */
 #toastBox{position:fixed;top:calc(env(safe-area-inset-top,0px) + .8rem);right:.8rem;z-index:3500;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;width:min(92vw,380px)}
@@ -630,6 +639,13 @@ html[data-theme="dark"]{--primary:#a5b4fc;--primary-600:#c7d2fe;--primary-soft:#
             <div class="card-head"><div><div class="card-title">แยกตามชั้น</div><div class="card-sub">จำนวนการตรวจแต่ละชั้น</div></div></div>
             <div class="chart-box h-64"><canvas id="chartFloor"></canvas><div class="chart-empty" id="floorEmpty" hidden>ไม่มีข้อมูลในช่วงเวลานี้</div></div>
           </div>
+        </div>
+        <div class="card p-4 mb-4">
+          <div class="card-head">
+            <div><div class="card-title" id="cmpTitle">เปรียบเทียบกับช่วงก่อนหน้า</div><div class="card-sub" id="cmpSub">—</div></div>
+            <span class="chip-soft" id="cmpBadge">—</span>
+          </div>
+          <div class="overflow-x-auto"><table class="tbl cmp-table" id="cmpTable"></table></div>
         </div>
         <div class="grid lg:grid-cols-2 gap-4 mb-2">
           <div class="card p-4">
@@ -2221,6 +2237,7 @@ function renderDashboard() {
   if (state.dashTab === 'overview') {
     safeRun('kpi', () => renderKPIs(list, rg));
     safeRun('charts', () => renderCharts(list, rg));
+    safeRun('compare', () => renderCompare());
     safeRun('rank', () => renderInspectorRank(list));
     safeRun('feed', () => renderRecentFeed());
   } else if (state.dashTab === 'daily') safeRun('daily', () => renderDaily());
@@ -2435,6 +2452,67 @@ function rankRows(agg, { max = 8, colorOffset = 0 } = {}) {
         <div class="text-[11px] muted">ยืนยันแล้ว ${v.n ? (v.ok / v.n * 100).toFixed(0) : 0}%</div>
       </div>
     </div>`).join('') + (agg.all.length > max ? `<div class="text-xs muted text-center pt-1">และอีก ${nf(agg.all.length - max)} รายการ</div>` : '');
+}
+/** เปรียบเทียบช่วงที่เลือกกับช่วงก่อนหน้าแบบเดียวกัน (วันนี้↔เมื่อวาน, สัปดาห์นี้↔สัปดาห์ก่อน ฯลฯ) */
+function comparePeriods(type = state.period.type, anchor = state.period.anchor) {
+  const curRg = getPeriodRange(type, anchor);
+  const prevAnchor = shiftAnchor(type, anchor, -1);
+  const prevRg = getPeriodRange(type, prevAnchor);
+  const pick = rg => state.records.filter(r => inRange(r._date, rg));
+  const cur = pick(curRg), prev = pick(prevRg);
+  const days = rg => Math.max(1, Math.round((rg.end - rg.start) / 864e5));
+  const stat = (list, rg) => {
+    const ok = list.filter(r => r._ok).length;
+    return {
+      total: list.length, ok, pending: list.length - ok,
+      rate: list.length ? ok / list.length * 100 : 0,
+      stores: new Set(list.map(r => r.StoreName.trim()).filter(Boolean)).size,
+      inspectors: new Set(list.map(r => r.InspectorName.trim()).filter(Boolean)).size,
+      shifts: new Set(list.map(r => r.Shift.trim()).filter(Boolean)).size,
+      perDay: list.length / days(rg)
+    };
+  };
+  const a = stat(cur, curRg), b = stat(prev, prevRg);
+  const rows = [
+    { label: 'จำนวนการตรวจ', key: 'total', unit: 'ครั้ง', better: 'up' },
+    { label: 'ยืนยันแล้ว', key: 'ok', unit: 'ครั้ง', better: 'up' },
+    { label: 'รอยืนยัน', key: 'pending', unit: 'ครั้ง', better: 'down' },
+    { label: 'อัตราการยืนยัน', key: 'rate', unit: '%', digits: 1, better: 'up' },
+    { label: 'ร้านค้า/สถานที่ที่ตรวจ', key: 'stores', unit: 'แห่ง', better: 'up' },
+    { label: 'ผู้ตรวจที่ปฏิบัติงาน', key: 'inspectors', unit: 'คน', better: 'flat' },
+    { label: 'รอบที่มีการตรวจ', key: 'shifts', unit: `จาก ${nf(CONFIG.SHIFTS.length)} รอบ`, better: 'up' },
+    { label: 'เฉลี่ยต่อวัน', key: 'perDay', unit: 'ครั้ง/วัน', digits: 1, better: 'up' }
+  ].map(r => {
+    const c = a[r.key], p = b[r.key];
+    return { ...r, cur: c, prev: p, diff: c - p, pct: p ? (c - p) / p * 100 : (c ? null : 0) };
+  });
+  return { type, curRg, prevRg, cur: a, prev: b, rows, curList: cur, prevList: prev };
+}
+const CMP_NAME = { day: 'วัน', week: 'สัปดาห์', month: 'เดือน', year: 'ปี' };
+function cmpCellHtml(r) {
+  // เขียว = ดีขึ้น · แดง = แย่ลง (รายการ "รอยืนยัน" ยิ่งน้อยยิ่งดี จึงกลับด้านสี)
+  if (!r.diff) return `<span class="cmp-flat">— เท่าเดิม</span>`;
+  const up = r.diff > 0;
+  const good = r.better === 'flat' ? null : (r.better === 'up' ? up : !up);
+  const cls = good === null ? 'cmp-flat' : good ? 'cmp-up' : 'cmp-down';
+  const num = `${up ? '+' : '−'}${Math.abs(r.diff).toFixed(r.digits || 0)}`;
+  const pct = r.pct === null ? 'ใหม่' : `${up ? '▲' : '▼'} ${Math.abs(r.pct).toFixed(0)}%`;
+  return `<span class="${cls}">${num} <small>(${pct})</small></span>`;
+}
+function renderCompare() {
+  const C = comparePeriods();
+  const unitName = CMP_NAME[C.type];
+  $('#cmpTitle').textContent = `เปรียบเทียบ${unitName}นี้กับ${unitName}ก่อนหน้า`;
+  $('#cmpSub').innerHTML = `<b>${escapeHtml(C.curRg.label)}</b> เทียบกับ ${escapeHtml(C.prevRg.label)}`;
+  const d = C.rows[0];
+  $('#cmpBadge').textContent = !d.diff ? 'เท่าเดิม' : d.diff > 0 ? `เพิ่มขึ้น ${nf(d.diff)} ครั้ง` : `ลดลง ${nf(Math.abs(d.diff))} ครั้ง`;
+  $('#cmpTable').innerHTML = `
+    <thead><tr><th>ตัวชี้วัด</th><th class="text-right">${escapeHtml(C.curRg.label)}</th><th class="text-right">${escapeHtml(C.prevRg.label)}</th><th class="text-right">เปลี่ยนแปลง</th></tr></thead>
+    <tbody>${C.rows.map(r => `<tr>
+        <td class="font-semibold">${r.label} <span class="text-xs muted">(${r.unit})</span></td>
+        <td class="text-right tabular-nums font-bold">${r.digits ? r.cur.toFixed(r.digits) : nf(r.cur)}</td>
+        <td class="text-right tabular-nums muted">${r.digits ? r.prev.toFixed(r.digits) : nf(r.prev)}</td>
+        <td class="text-right whitespace-nowrap">${cmpCellHtml(r)}</td></tr>`).join('')}</tbody>`;
 }
 function renderInspectorRank(list) { $('#inspectorRank').innerHTML = rankRows(buildAgg(list, r => r.InspectorName.trim()), { max: 8 }); }
 function timeAgo(d) {
@@ -2680,6 +2758,21 @@ function printHeader(title, sub, docNo) {
   return `<div class="pr-head"><div style="display:flex;align-items:center"><img src="${LOGO_URL}" alt=""><div><div class="pr-sub">${escapeHtml(CONFIG.ORG_NAME)} · ${escapeHtml(CONFIG.DEPT_NAME)}</div><h1>${escapeHtml(title)}</h1><div class="pr-sub">${sub}</div></div></div>
     <div class="pr-sub" style="text-align:right">${docNo ? `เลขที่เอกสาร <b>${escapeHtml(docNo)}</b><br>` : ''}พิมพ์เมื่อ ${fmtThaiLong(now)}<br>เวลา ${fmtHMS(now)} น.</div></div>`;
 }
+/** ตารางเปรียบเทียบกับช่วงก่อนหน้า สำหรับรายงาน A4 */
+function comparePrintTable() {
+  const C = comparePeriods();
+  const fmtDiff = r => !r.diff ? 'เท่าเดิม'
+    : `${r.diff > 0 ? '+' : '−'}${Math.abs(r.diff).toFixed(r.digits || 0)}${r.pct === null ? ' (ใหม่)' : ` (${r.diff > 0 ? '+' : '−'}${Math.abs(r.pct).toFixed(0)}%)`}`;
+  return `<div style="font-weight:700;color:#0d9488;margin:6px 0 4px">เปรียบเทียบกับช่วงก่อนหน้า</div>
+    <table class="pr-table" style="margin-bottom:10px"><thead><tr>
+      <th>ตัวชี้วัด</th><th style="width:18%;text-align:right">${escapeHtml(C.curRg.label)}</th>
+      <th style="width:18%;text-align:right">${escapeHtml(C.prevRg.label)}</th><th style="width:18%;text-align:right">เปลี่ยนแปลง</th></tr></thead>
+    <tbody>${C.rows.map(r => `<tr><td>${r.label} (${r.unit})</td>
+      <td style="text-align:right">${r.digits ? r.cur.toFixed(r.digits) : nf(r.cur)}</td>
+      <td style="text-align:right">${r.digits ? r.prev.toFixed(r.digits) : nf(r.prev)}</td>
+      <td style="text-align:right">${fmtDiff(r)}</td></tr>`).join('')}</tbody></table>`;
+}
+
 /** บทสรุปผู้บริหาร: สร้างจากข้อมูลจริงล้วน ไม่ใช่ข้อความสำเร็จรูป */
 function execSummary(list, { label, prevCount = null } = {}) {
   if (!list.length) return `<div class="pr-note">ไม่มีรายการตรวจใน${escapeHtml(label)}</div>`;
@@ -2739,6 +2832,7 @@ async function printReport() {
         <div class="pr-kpi"><span>ร้านค้า/สถานที่</span><b>${nf(stores)}</b></div>
       </div>
       ${execSummary(list, { label: 'ช่วงเวลานี้', prevCount: countIn(state.records, getPeriodRange(state.period.type, shiftAnchor(state.period.type, state.period.anchor, -1))) })}
+      ${comparePrintTable()}
       <div class="pr-charts">
         <figure><figcaption>${escapeHtml(t.title)}</figcaption><img src="${trendImg}" alt=""></figure>
         <figure><figcaption>จำนวนการตรวจแยกตามร้านค้า (10 อันดับแรก)</figcaption><img src="${storeImg}" alt=""></figure>
